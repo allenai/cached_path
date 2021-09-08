@@ -1,7 +1,11 @@
 from collections import Counter
 import json
+import os
+import shutil
 import time
+import pathlib
 
+from filelock import Timeout
 import pytest
 import responses
 from requests.exceptions import ConnectionError, HTTPError
@@ -15,50 +19,11 @@ from cached_path import (
     get_cached_path,
     _split_s3_path,
     _split_gcs_path,
-    open_compressed,
     CacheFile,
     _Meta,
-    _find_entries,
-    inspect_cache,
-    remove_cache_entries,
-    # LocalCacheResource,
 )
 
-import logging
-import os
-import pathlib
-import shutil
-import tempfile
-
-TEST_DIR = tempfile.mkdtemp(prefix="cached_path_tests")
-
-
-class BaseTestCase:
-    """
-    A custom testing class that disables some of the more verbose AllenNLP
-    logging and that creates and destroys a temp directory as a test fixture.
-    """
-
-    PROJECT_ROOT = (pathlib.Path(__file__).parent / "..").resolve()
-    MODULE_ROOT = PROJECT_ROOT / "cached_path"
-    TOOLS_ROOT = MODULE_ROOT / "tools"
-    TESTS_ROOT = PROJECT_ROOT / "tests"
-    FIXTURES_ROOT = PROJECT_ROOT / "test_fixtures"
-
-    def setup_method(self):
-        logging.basicConfig(
-            format="%(asctime)s - %(levelname)s - %(name)s - %(message)s", level=logging.DEBUG
-        )
-        # Disabling some of the more verbose logging statements that typically aren't very helpful
-        # in tests.
-        logging.getLogger("urllib3.connectionpool").disabled = True
-
-        self.TEST_DIR = pathlib.Path(TEST_DIR)
-
-        os.makedirs(self.TEST_DIR, exist_ok=True)
-
-    def teardown_method(self):
-        shutil.rmtree(self.TEST_DIR)
+from cached_path.testing import BaseTestClass
 
 
 def set_up_glove(url: str, byt: bytes, change_etag_every: int = 1000):
@@ -94,7 +59,53 @@ def set_up_glove(url: str, byt: bytes, change_etag_every: int = 1000):
     responses.add_callback(responses.HEAD, url, callback=head_callback)
 
 
-class TestFileUtils(BaseTestCase):
+class TestFileLock(BaseTestClass):
+    def setup_method(self):
+        super().setup_method()
+
+        # Set up a regular lock and a read-only lock.
+        open(self.TEST_DIR / "lock", "a").close()
+        open(self.TEST_DIR / "read_only_lock", "a").close()
+        os.chmod(self.TEST_DIR / "read_only_lock", 0o555)
+
+        # Also set up a read-only directory.
+        os.mkdir(self.TEST_DIR / "read_only_dir", 0o555)
+
+    def test_locking(self):
+        with FileLock(self.TEST_DIR / "lock"):
+            # Trying to acquire the lock again should fail.
+            with pytest.raises(Timeout):
+                with FileLock(self.TEST_DIR / "lock", timeout=0.1):
+                    pass
+
+        # Trying to acquire a lock when lacking write permissions on the file should fail.
+        with pytest.raises(PermissionError):
+            with FileLock(self.TEST_DIR / "read_only_lock"):
+                pass
+
+        # But this should only issue a warning if we set the `read_only_ok` flag to `True`.
+        with pytest.warns(UserWarning, match="Lacking permissions"):
+            with FileLock(self.TEST_DIR / "read_only_lock", read_only_ok=True):
+                pass
+
+        # However this should always fail when we lack write permissions and the file lock
+        # doesn't exist yet.
+        with pytest.raises(PermissionError):
+            with FileLock(self.TEST_DIR / "read_only_dir" / "lock", read_only_ok=True):
+                pass
+
+
+class TestCacheFile(BaseTestClass):
+    def test_temp_file_removed_on_error(self):
+        cache_filename = self.TEST_DIR / "cache_file"
+        with pytest.raises(IOError, match="I made this up"):
+            with CacheFile(cache_filename) as handle:
+                raise IOError("I made this up")
+        assert not os.path.exists(handle.name)
+        assert not os.path.exists(cache_filename)
+
+
+class TestFileUtils(BaseTestClass):
     def setup_method(self):
         super().setup_method()
         self.glove_file = self.FIXTURES_ROOT / "embeddings/glove.6B.100d.sample.txt.gz"
@@ -333,7 +344,7 @@ class TestFileUtils(BaseTestCase):
             get_cached_path(dangerous_file, extract_archive=True)
 
 
-class TestCachedPathWithArchive(BaseTestCase):
+class TestCachedPathWithArchive(BaseTestClass):
     def setup_method(self):
         super().setup_method()
         self.tar_file = self.TEST_DIR / "utf-8.tar.gz"
@@ -411,7 +422,7 @@ class TestCachedPathWithArchive(BaseTestCase):
         self.check_extracted(extracted)
 
 
-class TestHFHubDownload(BaseTestCase):
+class TestHFHubDownload(BaseTestClass):
     def test_cached_download_no_user_or_org(self):
         path = get_cached_path("hf://t5-small/config.json", cache_dir=self.TEST_DIR)
         assert os.path.isfile(path)

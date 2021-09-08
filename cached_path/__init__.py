@@ -2,15 +2,11 @@
 Utilities for working with the local dataset cache.
 """
 import string
-import weakref
-from contextlib import contextmanager
 import glob
-import io
 import os
 import logging
 import tempfile
 import json
-from abc import ABC
 from collections import defaultdict
 from dataclasses import dataclass, asdict
 from datetime import timedelta
@@ -26,15 +22,11 @@ from typing import (
     Callable,
     Set,
     List,
-    Iterator,
-    Iterable,
     Dict,
     NamedTuple,
-    MutableMapping,
 )
 from hashlib import sha256
 from functools import wraps
-from weakref import WeakValueDictionary
 from zipfile import ZipFile, is_zipfile
 import tarfile
 import shutil
@@ -667,11 +659,10 @@ def _hf_hub_download(
 
     if filename is not None:
         hub_url = hf_hub.hf_hub_url(repo_id=repo_id, filename=filename, revision=revision)
-        # TODO: change library name?
         cache_path = str(
             hf_hub.cached_download(
                 url=hub_url,
-                library_name="allennlp",
+                library_name="cached_path",
                 library_version=VERSION,
                 cache_dir=cache_dir,
             )
@@ -831,24 +822,6 @@ def get_file_extension(path: str, dot=True, lower: bool = True):
     return ext.lower() if lower else ext
 
 
-def open_compressed(
-    filename: Union[str, PathLike], mode: str = "rt", encoding: Optional[str] = "UTF-8", **kwargs
-):
-    if not isinstance(filename, str):
-        filename = str(filename)
-    open_fn: Callable = open
-
-    if filename.endswith(".gz"):
-        import gzip
-
-        open_fn = gzip.open
-    elif filename.endswith(".bz2"):
-        import bz2
-
-        open_fn = bz2.open
-    return open_fn(get_cached_path(filename), mode=mode, encoding=encoding, **kwargs)
-
-
 def _get_resource_size(path: str) -> int:
     """
     Get the size of a file or directory.
@@ -867,117 +840,3 @@ def _get_resource_size(path: str) -> int:
                 inodes.add(inode)
                 total_size += os.path.getsize(fp)
     return total_size
-
-
-class _CacheEntry(NamedTuple):
-    regular_files: List[_Meta]
-    extraction_dirs: List[_Meta]
-
-
-def _find_entries(
-    patterns: List[str] = None,
-    cache_dir: Union[str, Path] = None,
-) -> Tuple[int, Dict[str, _CacheEntry]]:
-    """
-    Find all cache entries, filtering ones that don't match any of the glob patterns given.
-
-    Returns the total size of the matching entries and mapping or resource name to meta data.
-
-    The values in the returned mapping are tuples because we seperate meta entries that
-    correspond to extraction directories vs regular cache entries.
-    """
-    cache_dir = os.path.expanduser(cache_dir or CACHE_DIRECTORY)
-
-    total_size: int = 0
-    cache_entries: Dict[str, _CacheEntry] = defaultdict(lambda: _CacheEntry([], []))
-    for meta_path in glob.glob(str(cache_dir) + "/*.json"):
-        meta = _Meta.from_path(meta_path)
-        if patterns and not any(fnmatch(meta.resource, p) for p in patterns):
-            continue
-        if meta.extraction_dir:
-            cache_entries[meta.resource].extraction_dirs.append(meta)
-        else:
-            cache_entries[meta.resource].regular_files.append(meta)
-        total_size += meta.size
-
-    # Sort entries for each resource by creation time, newest first.
-    for entry in cache_entries.values():
-        entry.regular_files.sort(key=lambda meta: meta.creation_time, reverse=True)
-        entry.extraction_dirs.sort(key=lambda meta: meta.creation_time, reverse=True)
-
-    return total_size, cache_entries
-
-
-def remove_cache_entries(patterns: List[str], cache_dir: Union[str, Path] = None) -> int:
-    """
-    Remove cache entries matching the given patterns.
-
-    Returns the total reclaimed space in bytes.
-    """
-    total_size, cache_entries = _find_entries(patterns=patterns, cache_dir=cache_dir)
-    for resource, entry in cache_entries.items():
-        for meta in entry.regular_files:
-            logger.info("Removing cached version of %s at %s", resource, meta.cached_path)
-            os.remove(meta.cached_path)
-            if os.path.exists(meta.cached_path + ".lock"):
-                os.remove(meta.cached_path + ".lock")
-            os.remove(meta.cached_path + ".json")
-        for meta in entry.extraction_dirs:
-            logger.info("Removing extracted version of %s at %s", resource, meta.cached_path)
-            shutil.rmtree(meta.cached_path)
-            if os.path.exists(meta.cached_path + ".lock"):
-                os.remove(meta.cached_path + ".lock")
-            os.remove(meta.cached_path + ".json")
-    return total_size
-
-
-def inspect_cache(patterns: List[str] = None, cache_dir: Union[str, Path] = None):
-    """
-    Print out useful information about the cache directory.
-    """
-    from allennlp.common.util import format_timedelta, format_size
-
-    cache_dir = os.path.expanduser(cache_dir or CACHE_DIRECTORY)
-
-    # Gather cache entries by resource.
-    total_size, cache_entries = _find_entries(patterns=patterns, cache_dir=cache_dir)
-
-    if patterns:
-        print(f"Cached resources matching {patterns}:")
-    else:
-        print("Cached resources:")
-
-    for resource, entry in sorted(
-        cache_entries.items(),
-        # Sort by creation time, latest first.
-        key=lambda x: max(
-            0 if not x[1][0] else x[1][0][0].creation_time,
-            0 if not x[1][1] else x[1][1][0].creation_time,
-        ),
-        reverse=True,
-    ):
-        print("\n-", resource)
-        if entry.regular_files:
-            td = timedelta(seconds=time.time() - entry.regular_files[0].creation_time)
-            n_versions = len(entry.regular_files)
-            size = entry.regular_files[0].size
-            print(
-                f"  {n_versions} {'versions' if n_versions > 1 else 'version'} cached, "
-                f"latest {format_size(size)} from {format_timedelta(td)} ago"
-            )
-        if entry.extraction_dirs:
-            td = timedelta(seconds=time.time() - entry.extraction_dirs[0].creation_time)
-            n_versions = len(entry.extraction_dirs)
-            size = entry.extraction_dirs[0].size
-            print(
-                f"  {n_versions} {'versions' if n_versions > 1 else 'version'} extracted, "
-                f"latest {format_size(size)} from {format_timedelta(td)} ago"
-            )
-    print(f"\nTotal size: {format_size(total_size)}")
-
-
-SAFE_FILENAME_CHARS = frozenset("-_.%s%s" % (string.ascii_letters, string.digits))
-
-
-def filename_is_safe(filename: str) -> bool:
-    return all(c in SAFE_FILENAME_CHARS for c in filename)
