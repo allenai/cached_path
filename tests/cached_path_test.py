@@ -1,14 +1,9 @@
 from collections import Counter
-import os
-import pathlib
 import json
 import time
-import shutil
 
-from filelock import Timeout
 import pytest
 import responses
-import torch
 from requests.exceptions import ConnectionError, HTTPError
 
 import cached_path as file_utils
@@ -44,7 +39,7 @@ class BaseTestCase:
     logging and that creates and destroys a temp directory as a test fixture.
     """
 
-    PROJECT_ROOT = (pathlib.Path(__file__).parent / ".." ).resolve()
+    PROJECT_ROOT = (pathlib.Path(__file__).parent / "..").resolve()
     MODULE_ROOT = PROJECT_ROOT / "cached_path"
     TOOLS_ROOT = MODULE_ROOT / "tools"
     TESTS_ROOT = PROJECT_ROOT / "tests"
@@ -64,7 +59,6 @@ class BaseTestCase:
 
     def teardown_method(self):
         shutil.rmtree(self.TEST_DIR)
-
 
 
 def set_up_glove(url: str, byt: bytes, change_etag_every: int = 1000):
@@ -98,6 +92,7 @@ def set_up_glove(url: str, byt: bytes, change_etag_every: int = 1000):
         return (200, headers, "")
 
     responses.add_callback(responses.HEAD, url, callback=head_callback)
+
 
 class TestFileUtils(BaseTestCase):
     def setup_method(self):
@@ -414,6 +409,7 @@ class TestCachedPathWithArchive(BaseTestCase):
         extracted = get_cached_path(url, cache_dir=self.TEST_DIR, extract_archive=True)
         assert extracted.endswith("-extracted")
         self.check_extracted(extracted)
+
 
 class TestHFHubDownload(BaseTestCase):
     def test_cached_download_no_user_or_org(self):

@@ -4,7 +4,7 @@ Wraps tqdm so we can add configurable
 global defaults for certain tqdm parameters.
 """
 import logging
-from allennlp.common import logging as common_logging
+import os
 import sys
 from time import time
 from typing import Optional
@@ -54,7 +54,7 @@ class TqdmToLogsWriter(object):
 
     def write(self, message):
         file_friendly_message: Optional[str] = None
-        if common_logging.FILE_FRIENDLY_LOGGING:
+        if os.environ.get("FILE_FRIENDLY_LOGGING", False):
             file_friendly_message = replace_cr_with_newline(message)
             if file_friendly_message.strip():
                 sys.stderr.write(file_friendly_message)
@@ -80,7 +80,7 @@ class Tqdm:
     @staticmethod
     def tqdm(*args, **kwargs):
         # Use a slower interval when FILE_FRIENDLY_LOGGING is set.
-        default_mininterval = 2.0 if common_logging.FILE_FRIENDLY_LOGGING else 0.1
+        default_mininterval = 2.0 if os.environ.get("FILE_FRIENDLY_LOGGING", False) else 0.1
 
         new_kwargs = {
             "file": TqdmToLogsWriter(),

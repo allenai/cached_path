@@ -38,27 +38,22 @@ from weakref import WeakValueDictionary
 from zipfile import ZipFile, is_zipfile
 import tarfile
 import shutil
-import pickle
 import time
 import warnings
 
 import boto3
 import botocore
-import torch
 from filelock import FileLock as _FileLock
 from google.cloud import storage
 from google.api_core.exceptions import NotFound
-import numpy as np
 from overrides import overrides
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
-import lmdb
-from torch import Tensor
 import huggingface_hub as hf_hub
 
 from cached_path.version import VERSION
-from allennlp.common.tqdm import Tqdm
+from cached_path.tqdm import Tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -549,11 +544,6 @@ def _find_latest_cached(url: str, cache_dir: Union[str, Path]) -> Optional[str]:
     if candidates:
         return candidates[0][0]
     return None
-
-
-def _serialize(data):
-    buffer = pickle.dumps(data, protocol=-1)
-    return np.frombuffer(buffer, dtype=np.uint8)
 
 
 class CacheFile:
