@@ -31,7 +31,7 @@ jobs:
 
     - name: Check if source files have changed
       run: |
-        git diff --name-only $(git merge-base origin/main HEAD) | grep '^my_package/.*\.py$' && echo "source_files_changed=true" >> $GITHUB_ENV || echo "source_files_changed=false" >> $GITHUB_ENV
+        git diff --name-only $(git merge-base origin/main HEAD) | grep '^cached_path/.*\.py$' && echo "source_files_changed=true" >> $GITHUB_ENV || echo "source_files_changed=false" >> $GITHUB_ENV
 
     - name: Check that CHANGELOG has been updated
       if: env.source_files_changed == 'true'

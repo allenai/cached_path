@@ -23,7 +23,7 @@ with open("requirements.txt") as requirements_file:
         install_requirements.append(fix_url_dependencies(line))
 
 setup(
-    name="my_package",
+    name="cached_path",
     version="0.0.1",
     description="",
     long_description=open("README.md").read(),
