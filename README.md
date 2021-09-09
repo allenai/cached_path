@@ -1,16 +1,61 @@
-# python-package-template
+<div align="center">
+    <br>
+    A file utility library for downloading, caching, and accessing dataset files.
+    </p>
+    <hr/>
+</div>
+<p align="center">
+    <a href="https://github.com/allenai/cached_path/actions">
+        <img alt="CI" src="https://github.com/allenai/cached_path/workflows/CI/badge.svg?event=push&branch=main">
+    </a>
+    <a href="https://pypi.org/project/cached_path/">
+        <img alt="PyPI" src="https://img.shields.io/pypi/v/cached_path">
+    </a>
+    <a href="https://github.com/allenai/cached_path/blob/main/LICENSE">
+        <img alt="License" src="https://img.shields.io/github/license/allenai/cached_path.svg?color=blue&cachedrop">
+    </a>
+    <a href="https://codecov.io/gh/allenai/cached_path">
+        <img alt="Codecov" src="https://codecov.io/gh/allenai/cached_path/branch/main/graph/badge.svg">
+    </a>
+    <br/>
+</p>
 
-This is a template repository for projects that are Python packages.
+## Installation
 
-## Getting started
+`cached_path` requires Python 3.6.1 or later.
 
-After creating a new repository from this template, you need to:
+```bash
+pip install cached_path
+```
 
-1. Change the name of the `my_package` directory to the name you want.
-2. Replace all mentions of `my_package` throughout this repository with the name you want.
+## Usage
 
-    ```bash
-    find . -type f -not -path ./.git -not -path ./README.md | xargs grep 'my_package'
-    ```
+Given something that might be a URL or local path, determine which.
+If it's a remote resource, download the file and cache it, and
+then return the path to the cached file. If it's already a local path,
+make sure the file exists and return the path.
 
-3. Add repository secrets for `PYPI_USERNAME` and `PYPI_PASSWORD`.
+For URLs, "http://", "https://", "s3://", "gs://", and "hf://" are all supported.
+The latter corresponds to the HuggingFace Hub.
+
+For example, to download the PyTorch weights for the model `epwalsh/bert-xsmall-dummy`
+on HuggingFace, you could do:
+
+```python
+get_cached_path("hf://epwalsh/bert-xsmall-dummy/pytorch_model.bin")
+```
+
+For paths or URLs that point to a tarfile or zipfile, you can also add a path
+to a specific file to the `url_or_filename` preceeded by a "!", and the archive will
+be automatically extracted (provided you set `extract_archive` to `True`),
+returning the local path to the specific file. For example:
+
+```python
+get_cached_path("model.tar.gz!weights.th", extract_archive=True)
+```
+
+## Team
+
+`cached_path` is developed and maintained by the AllenNLP team, backed by [the Allen Institute for Artificial Intelligence (AI2)](https://allenai.org/).
+AI2 is a non-profit institute with the mission to contribute to humanity through high-impact AI research and engineering.
+To learn more about who specifically contributed to this codebase, see [our contributors](https://github.com/allenai/cached_path/graphs/contributors) page.
