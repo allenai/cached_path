@@ -8,8 +8,3 @@ ignore =
 
 exclude =
     .venv/**
-
-per-file-ignores =
-    # __init__.py files are allowed to have unused imports and lines-too-long
-    */__init__.py:F401
-    */**/**/__init__.py:F401,E501

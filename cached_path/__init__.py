@@ -188,7 +188,7 @@ def cached_path(
     on HuggingFace, you could do:
 
     ```python
-    get_cached_path("hf://epwalsh/bert-xsmall-dummy/pytorch_model.bin")
+    cached_path("hf://epwalsh/bert-xsmall-dummy/pytorch_model.bin")
     ```
 
     For paths or URLs that point to a tarfile or zipfile, you can also add a path
@@ -197,7 +197,7 @@ def cached_path(
     returning the local path to the specific file. For example:
 
     ```python
-    get_cached_path("model.tar.gz!weights.th", extract_archive=True)
+    cached_path("model.tar.gz!weights.th", extract_archive=True)
     ```
 
     # Parameters
@@ -236,7 +236,7 @@ def cached_path(
         file_name = url_or_filename[exclamation_index + 1 :]
 
         # Call 'cached_path' recursively now to get the local path to the archive itself.
-        cached_archive_path = get_cached_path(archive_path, cache_dir, True, force_extract)
+        cached_archive_path = cached_path(archive_path, cache_dir, True, force_extract)
         if not os.path.isdir(cached_archive_path):
             raise ValueError(
                 f"{url_or_filename} uses the ! syntax, but does not specify an archive file."
