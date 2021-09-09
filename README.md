@@ -1,9 +1,7 @@
-<div align="center">
-    <br>
-    A file utility library for downloading, caching, and accessing dataset files.
-    </p>
-    <hr/>
-</div>
+# cached_path
+
+A file utility library for downloading, caching, and accessing dataset files.
+
 <p align="center">
     <a href="https://github.com/allenai/cached_path/actions">
         <img alt="CI" src="https://github.com/allenai/cached_path/workflows/CI/badge.svg?event=push&branch=main">
