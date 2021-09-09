@@ -20,4 +20,4 @@ setuptools
 wheel
 
 # Mocking HTTP responses
-responses==0.13.3
+responses==0.13.4
