@@ -1,6 +1,6 @@
 filelock==3.0.12
 boto3==1.18.35
-google-cloud-storage==1.42.0
+google-cloud-storage==1.42.1
 overrides==3.1.0
 huggingface-hub==0.0.12
 responses==0.13.3
