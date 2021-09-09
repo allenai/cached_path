@@ -18,3 +18,6 @@ codecov
 twine>=1.11.0
 setuptools
 wheel
+
+# Mocking HTTP responses
+responses==0.13.3

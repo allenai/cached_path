@@ -1,6 +1,7 @@
 # cached_path
 
-A file utility library for downloading, caching, and accessing dataset files.
+A file utility library that provides a unified, simple interface for accessing both local and remote files.
+This can be used behind other APIs that need to access files agnostic to where they are located.
 
 <p align="center">
     <a href="https://github.com/allenai/cached_path/actions">
@@ -28,7 +29,7 @@ pip install cached_path
 
 ## Usage
 
-Given something that might be a URL or local path, `get_cached_path` determines which.
+Given something that might be a URL or local path, `cached_path` determines which.
 If it's a remote resource, it downloads the file and caches it, and
 then returns the path to the cached file. If it's already a local path,
 it makes sure the file exists and returns the path.
