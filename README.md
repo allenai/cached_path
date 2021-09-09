@@ -29,6 +29,10 @@ pip install cached_path
 
 ## Usage
 
+```python
+from cached_path import cached_path
+```
+
 Given something that might be a URL or local path, `cached_path` determines which.
 If it's a remote resource, it downloads the file and caches it, and
 then returns the path to the cached file. If it's already a local path,
@@ -41,7 +45,7 @@ For example, to download the PyTorch weights for the model `epwalsh/bert-xsmall-
 on HuggingFace, you could do:
 
 ```python
-get_cached_path("hf://epwalsh/bert-xsmall-dummy/pytorch_model.bin")
+cached_path("hf://epwalsh/bert-xsmall-dummy/pytorch_model.bin")
 ```
 
 For paths or URLs that point to a tarfile or zipfile, you can also add a path
@@ -50,7 +54,7 @@ be automatically extracted (provided you set `extract_archive` to `True`),
 returning the local path to the specific file. For example:
 
 ```python
-get_cached_path("model.tar.gz!weights.th", extract_archive=True)
+cached_path("model.tar.gz!weights.th", extract_archive=True)
 ```
 
 ## Team
