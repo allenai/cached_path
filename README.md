@@ -28,10 +28,10 @@ pip install cached_path
 
 ## Usage
 
-Given something that might be a URL or local path, determine which.
-If it's a remote resource, download the file and cache it, and
-then return the path to the cached file. If it's already a local path,
-make sure the file exists and return the path.
+Given something that might be a URL or local path, `get_cached_path` determines which.
+If it's a remote resource, it downloads the file and caches it, and
+then returns the path to the cached file. If it's already a local path,
+it makes sure the file exists and returns the path.
 
 For URLs, "http://", "https://", "s3://", "gs://", and "hf://" are all supported.
 The latter corresponds to the HuggingFace Hub.
