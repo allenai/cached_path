@@ -1,16 +1,14 @@
 """
-Utilities for working with the local dataset cache.
+The idea behind cached-path is to provide a unified, simple interface for accessing both local and remote files.
+This can be used behind other APIs that need to access files agnostic to where they are located.
 """
-import string
+
 import glob
 import os
 import logging
 import tempfile
 import json
-from collections import defaultdict
 from dataclasses import dataclass, asdict
-from datetime import timedelta
-from fnmatch import fnmatch
 from os import PathLike
 from urllib.parse import urlparse
 from pathlib import Path
@@ -22,8 +20,6 @@ from typing import (
     Callable,
     Set,
     List,
-    Dict,
-    NamedTuple,
 )
 from hashlib import sha256
 from functools import wraps
@@ -49,8 +45,9 @@ from cached_path.tqdm import Tqdm
 
 logger = logging.getLogger(__name__)
 
-CACHE_ROOT = Path(os.getenv("CACHED_PATH_CACHE_ROOT", Path.home() / ".cached_path"))
-CACHE_DIRECTORY = str(CACHE_ROOT / "cache")
+CACHE_DIRECTORY = Path(os.getenv("CACHED_PATH_CACHE_ROOT", Path.home() / ".cache" / "cached_path"))
+
+PathOrStr = Union[str, PathLike]
 
 
 class FileLock(_FileLock):
@@ -64,9 +61,7 @@ class FileLock(_FileLock):
     the lock already exists but the lock can't be acquired because write access is blocked.
     """
 
-    def __init__(
-        self, lock_file: Union[str, PathLike], timeout=-1, read_only_ok: bool = False
-    ) -> None:
+    def __init__(self, lock_file: PathOrStr, timeout=-1, read_only_ok: bool = False) -> None:
         super().__init__(str(lock_file), timeout=timeout)
         self._read_only_ok = read_only_ok
 
@@ -111,14 +106,11 @@ def _resource_to_filename(resource: str, etag: str = None) -> str:
     return filename
 
 
-def filename_to_url(filename: str, cache_dir: Union[str, Path] = None) -> Tuple[str, str]:
+def filename_to_url(filename: str, cache_dir: PathOrStr = CACHE_DIRECTORY) -> Tuple[str, str]:
     """
     Return the url and etag (which may be `None`) stored for `filename`.
     Raise `FileNotFoundError` if `filename` or its stored metadata do not exist.
     """
-    if cache_dir is None:
-        cache_dir = CACHE_DIRECTORY
-
     cache_path = os.path.join(cache_dir, filename)
     if not os.path.exists(cache_path):
         raise FileNotFoundError("file {} not found".format(cache_path))
@@ -177,9 +169,9 @@ def check_tarfile(tar_file: tarfile.TarFile):
                 )
 
 
-def get_cached_path(
-    url_or_filename: Union[str, PathLike],
-    cache_dir: Union[str, Path] = None,
+def cached_path(
+    url_or_filename: PathOrStr,
+    cache_dir: PathOrStr = CACHE_DIRECTORY,
     extract_archive: bool = False,
     force_extract: bool = False,
 ) -> str:
@@ -196,7 +188,7 @@ def get_cached_path(
     on HuggingFace, you could do:
 
     ```python
-    get_cached_path("hf://epwalsh/bert-xsmall-dummy/pytorch_model.bin")
+    cached_path("hf://epwalsh/bert-xsmall-dummy/pytorch_model.bin")
     ```
 
     For paths or URLs that point to a tarfile or zipfile, you can also add a path
@@ -205,15 +197,15 @@ def get_cached_path(
     returning the local path to the specific file. For example:
 
     ```python
-    get_cached_path("model.tar.gz!weights.th", extract_archive=True)
+    cached_path("model.tar.gz!weights.th", extract_archive=True)
     ```
 
     # Parameters
 
-    url_or_filename : `Union[str, Path]`
+    url_or_filename : `PathOrStr`
         A URL or path to parse and possibly download.
 
-    cache_dir : `Union[str, Path]`, optional (default = `None`)
+    cache_dir : `PathOrStr`, optional (default = `CACHE_DIRECTORY`)
         The directory to cache downloads.
 
     extract_archive : `bool`, optional (default = `False`)
@@ -228,9 +220,6 @@ def get_cached_path(
             Use this flag with caution! This can lead to race conditions if used
             from multiple processes on the same file.
     """
-    if cache_dir is None:
-        cache_dir = CACHE_DIRECTORY
-
     cache_dir = os.path.expanduser(cache_dir)
     os.makedirs(cache_dir, exist_ok=True)
 
@@ -247,7 +236,7 @@ def get_cached_path(
         file_name = url_or_filename[exclamation_index + 1 :]
 
         # Call 'cached_path' recursively now to get the local path to the archive itself.
-        cached_archive_path = get_cached_path(archive_path, cache_dir, True, force_extract)
+        cached_archive_path = cached_path(archive_path, cache_dir, True, force_extract)
         if not os.path.isdir(cached_archive_path):
             raise ValueError(
                 f"{url_or_filename} uses the ! syntax, but does not specify an archive file."
@@ -358,7 +347,7 @@ def get_cached_path(
     return file_path
 
 
-def is_url_or_existing_file(url_or_filename: Union[str, Path, None]) -> bool:
+def is_url_or_existing_file(url_or_filename: PathOrStr) -> bool:
     """
     Given something that might be a URL (or might be a local path),
     determine check if it's url or an existing file path.
@@ -514,7 +503,7 @@ def _http_get(url: str, temp_file: IO) -> None:
         req.raise_for_status()
         content_length = req.headers.get("Content-Length")
         total = int(content_length) if content_length is not None else None
-        progress = Tqdm.tqdm(unit="B", total=total, desc="downloading")
+        progress = Tqdm.tqdm(unit="B", unit_scale=True, total=total, desc="downloading")
         for chunk in req.iter_content(chunk_size=1024):
             if chunk:  # filter out keep-alive new chunks
                 progress.update(len(chunk))
@@ -522,7 +511,7 @@ def _http_get(url: str, temp_file: IO) -> None:
         progress.close()
 
 
-def _find_latest_cached(url: str, cache_dir: Union[str, Path]) -> Optional[str]:
+def _find_latest_cached(url: str, cache_dir: PathOrStr) -> Optional[str]:
     filename = _resource_to_filename(url)
     cache_path = os.path.join(cache_dir, filename)
     candidates: List[Tuple[str, float]] = []
@@ -549,9 +538,7 @@ class CacheFile:
     goes wrong while writing to the temporary file, it will be removed.
     """
 
-    def __init__(
-        self, cache_filename: Union[PathLike, str], mode: str = "w+b", suffix: str = ".tmp"
-    ) -> None:
+    def __init__(self, cache_filename: PathOrStr, mode: str = "w+b", suffix: str = ".tmp") -> None:
         self.cache_filename = (
             cache_filename if isinstance(cache_filename, Path) else Path(cache_filename)
         )
@@ -628,7 +615,7 @@ class _Meta:
             json.dump(asdict(self), meta_file)
 
     @classmethod
-    def from_path(cls, path: Union[str, Path]) -> "_Meta":
+    def from_path(cls, path: PathOrStr) -> "_Meta":
         path = str(path)
         with open(path) as meta_file:
             data = json.load(meta_file)
@@ -647,7 +634,7 @@ class _Meta:
 
 
 def _hf_hub_download(
-    url, model_identifier: str, filename: Optional[str], cache_dir: Union[str, Path]
+    url, model_identifier: str, filename: Optional[str], cache_dir: PathOrStr = CACHE_DIRECTORY
 ) -> str:
     revision: Optional[str]
     if "@" in model_identifier:
@@ -694,14 +681,11 @@ def _hf_hub_download(
 
 
 # TODO(joelgrus): do we want to do checksums or anything like that?
-def get_from_cache(url: str, cache_dir: Union[str, Path] = None) -> str:
+def get_from_cache(url: str, cache_dir: PathOrStr = CACHE_DIRECTORY) -> str:
     """
     Given a URL, look for the corresponding dataset in the local cache.
     If it's not there, download it. Then return the path to the cached file.
     """
-    if cache_dir is None:
-        cache_dir = CACHE_DIRECTORY
-
     if url.startswith("hf://"):
         # Remove the 'hf://' prefix
         identifier = url[5:]
@@ -802,24 +786,6 @@ def get_from_cache(url: str, cache_dir: Union[str, Path] = None) -> str:
             meta.to_file()
 
     return cache_path
-
-
-def read_set_from_file(filename: str) -> Set[str]:
-    """
-    Extract a de-duped collection (set) of text from a file.
-    Expected file format is one item per line.
-    """
-    collection = set()
-    with open(filename, "r") as file_:
-        for line in file_:
-            collection.add(line.rstrip())
-    return collection
-
-
-def get_file_extension(path: str, dot=True, lower: bool = True):
-    ext = os.path.splitext(path)[1]
-    ext = ext if dot else ext[1:]
-    return ext.lower() if lower else ext
 
 
 def _get_resource_size(path: str) -> int:

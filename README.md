@@ -1,6 +1,7 @@
 # cached_path
 
-A file utility library for downloading, caching, and accessing dataset files.
+A file utility library that provides a unified, simple interface for accessing both local and remote files.
+This can be used behind other APIs that need to access files agnostic to where they are located.
 
 <p align="center">
     <a href="https://github.com/allenai/cached_path/actions">
@@ -28,7 +29,11 @@ pip install cached_path
 
 ## Usage
 
-Given something that might be a URL or local path, `get_cached_path` determines which.
+```python
+from cached_path import cached_path
+```
+
+Given something that might be a URL or local path, `cached_path` determines which.
 If it's a remote resource, it downloads the file and caches it, and
 then returns the path to the cached file. If it's already a local path,
 it makes sure the file exists and returns the path.
@@ -40,7 +45,7 @@ For example, to download the PyTorch weights for the model `epwalsh/bert-xsmall-
 on HuggingFace, you could do:
 
 ```python
-get_cached_path("hf://epwalsh/bert-xsmall-dummy/pytorch_model.bin")
+cached_path("hf://epwalsh/bert-xsmall-dummy/pytorch_model.bin")
 ```
 
 For paths or URLs that point to a tarfile or zipfile, you can also add a path
@@ -49,7 +54,7 @@ be automatically extracted (provided you set `extract_archive` to `True`),
 returning the local path to the specific file. For example:
 
 ```python
-get_cached_path("model.tar.gz!weights.th", extract_archive=True)
+cached_path("model.tar.gz!weights.th", extract_archive=True)
 ```
 
 ## Team

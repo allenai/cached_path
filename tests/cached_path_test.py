@@ -16,7 +16,7 @@ from cached_path import (
     _resource_to_filename,
     filename_to_url,
     get_from_cache,
-    get_cached_path,
+    cached_path,
     _split_s3_path,
     _split_gcs_path,
     CacheFile,
@@ -295,17 +295,17 @@ class TestFileUtils(BaseTestClass):
 
         # non-existent file
         with pytest.raises(FileNotFoundError):
-            filename = get_cached_path(self.FIXTURES_ROOT / "does_not_exist" / "fake_file.tar.gz")
+            filename = cached_path(self.FIXTURES_ROOT / "does_not_exist" / "fake_file.tar.gz")
 
         # unparsable URI
         with pytest.raises(ValueError):
-            filename = get_cached_path("fakescheme://path/to/fake/file.tar.gz")
+            filename = cached_path("fakescheme://path/to/fake/file.tar.gz")
 
         # existing file as path
-        assert get_cached_path(self.glove_file) == str(self.glove_file)
+        assert cached_path(self.glove_file) == str(self.glove_file)
 
         # caches urls
-        filename = get_cached_path(url, cache_dir=self.TEST_DIR)
+        filename = cached_path(url, cache_dir=self.TEST_DIR)
 
         assert len(responses.calls) == 2
         assert filename == os.path.join(self.TEST_DIR, _resource_to_filename(url, etag="0"))
@@ -314,7 +314,7 @@ class TestFileUtils(BaseTestClass):
             assert cached_file.read() == self.glove_bytes
 
         # archives
-        filename = get_cached_path(
+        filename = cached_path(
             self.FIXTURES_ROOT / "common" / "quote.tar.gz!quote.txt",
             extract_archive=True,
             cache_dir=self.TEST_DIR,
@@ -336,12 +336,12 @@ class TestFileUtils(BaseTestClass):
             )
 
         with pytest.raises(HTTPError):
-            get_cached_path(url_404, cache_dir=self.TEST_DIR)
+            cached_path(url_404, cache_dir=self.TEST_DIR)
 
     def test_extract_with_external_symlink(self):
         dangerous_file = self.FIXTURES_ROOT / "common" / "external_symlink.tar.gz"
         with pytest.raises(ValueError):
-            get_cached_path(dangerous_file, extract_archive=True)
+            cached_path(dangerous_file, extract_archive=True)
 
 
 class TestCachedPathWithArchive(BaseTestClass):
@@ -364,11 +364,11 @@ class TestCachedPathWithArchive(BaseTestClass):
         assert os.path.exists(extracted + ".json")
 
     def test_cached_path_extract_local_tar(self):
-        extracted = get_cached_path(self.tar_file, cache_dir=self.TEST_DIR, extract_archive=True)
+        extracted = cached_path(self.tar_file, cache_dir=self.TEST_DIR, extract_archive=True)
         self.check_extracted(extracted)
 
     def test_cached_path_extract_local_zip(self):
-        extracted = get_cached_path(self.zip_file, cache_dir=self.TEST_DIR, extract_archive=True)
+        extracted = cached_path(self.zip_file, cache_dir=self.TEST_DIR, extract_archive=True)
         self.check_extracted(extracted)
 
     @responses.activate
@@ -392,7 +392,7 @@ class TestCachedPathWithArchive(BaseTestClass):
             headers={"ETag": "fake-etag"},
         )
 
-        extracted = get_cached_path(url, cache_dir=self.TEST_DIR, extract_archive=True)
+        extracted = cached_path(url, cache_dir=self.TEST_DIR, extract_archive=True)
         assert extracted.endswith("-extracted")
         self.check_extracted(extracted)
 
@@ -417,14 +417,14 @@ class TestCachedPathWithArchive(BaseTestClass):
             headers={"ETag": "fake-etag"},
         )
 
-        extracted = get_cached_path(url, cache_dir=self.TEST_DIR, extract_archive=True)
+        extracted = cached_path(url, cache_dir=self.TEST_DIR, extract_archive=True)
         assert extracted.endswith("-extracted")
         self.check_extracted(extracted)
 
 
 class TestHFHubDownload(BaseTestClass):
     def test_cached_download_no_user_or_org(self):
-        path = get_cached_path("hf://t5-small/config.json", cache_dir=self.TEST_DIR)
+        path = cached_path("hf://t5-small/config.json", cache_dir=self.TEST_DIR)
         assert os.path.isfile(path)
         assert pathlib.Path(os.path.dirname(path)) == self.TEST_DIR
         assert os.path.isfile(path + ".json")
@@ -435,7 +435,7 @@ class TestHFHubDownload(BaseTestClass):
     def test_snapshot_download_no_user_or_org(self):
         # This is the smallest snapshot I could find that is not associated with a user / org.
         model_name = "distilbert-base-german-cased"
-        path = get_cached_path(f"hf://{model_name}")
+        path = cached_path(f"hf://{model_name}")
         assert os.path.isdir(path)
         assert os.path.isfile(path + ".json")
         meta = _Meta.from_path(path + ".json")
