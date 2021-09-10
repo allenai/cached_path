@@ -13,9 +13,6 @@ This can be used behind other APIs that need to access files agnostic to where t
     <a href="https://github.com/allenai/cached_path/blob/main/LICENSE">
         <img alt="License" src="https://img.shields.io/github/license/allenai/cached_path.svg?color=blue&cachedrop">
     </a>
-    <a href="https://codecov.io/gh/allenai/cached_path">
-        <img alt="Codecov" src="https://codecov.io/gh/allenai/cached_path/branch/main/graph/badge.svg">
-    </a>
     <br/>
 </p>
 
