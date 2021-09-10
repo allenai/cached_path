@@ -22,9 +22,16 @@ with open("requirements.txt") as requirements_file:
             continue
         install_requirements.append(fix_url_dependencies(line))
 
+
+# version.py defines the VERSION and VERSION_SHORT variables.
+# We use exec here so we don't import cached_path whilst setting up.
+VERSION = {}  # type: ignore
+with open("cached_path/version.py", "r") as version_file:
+    exec(version_file.read(), VERSION)
+
 setup(
-    name="my_package",
-    version="0.0.1",
+    name="cached_path",
+    version=VERSION["VERSION"],
     description="",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
@@ -35,13 +42,20 @@ setup(
         "Programming Language :: Python :: 3",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
-    keywords="",
-    url="",
+    keywords="allennlp cached_path file utils",
+    url="https://github.com/allenai/cached_path",
     author="Allen Institute for Artificial Intelligence",
     author_email="contact@allenai.org",
     license="Apache",
     packages=find_packages(
-        exclude=["*.tests", "*.tests.*", "tests.*", "tests"],
+        exclude=[
+            "*.tests",
+            "*.tests.*",
+            "tests.*",
+            "tests",
+            "test_fixtures",
+            "test_fixtures.*",
+        ]
     ),
     install_requires=install_requirements,
     python_requires=">=3.6.1",

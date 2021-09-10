@@ -1,0 +1,6 @@
+requests>=2.0,<3.0
+filelock>=3.0,<4.0
+boto3>=1.0,<2.0
+google-cloud-storage>=1.0,<2.0
+overrides==3.1.0
+huggingface-hub>=0.0.12,<0.1.0
