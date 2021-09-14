@@ -66,9 +66,9 @@ class FileLock(_FileLock):
         self._read_only_ok = read_only_ok
 
     @overrides
-    def acquire(self, timeout=None, poll_interval=0.05):
+    def acquire(self, timeout=None, poll_intervall=0.05):
         try:
-            super().acquire(timeout=timeout, poll_intervall=poll_interval)
+            super().acquire(timeout=timeout, poll_intervall=poll_intervall)
         except OSError as err:
             # OSError could be a lot of different things, but what we're looking
             # for in particular are permission errors, such as:
