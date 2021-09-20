@@ -10,15 +10,13 @@ import pytest
 import responses
 from requests.exceptions import ConnectionError, HTTPError
 
-import cached_path as file_utils
+from cached_path.protocols import HttpCacher
 from cached_path import (
     FileLock,
     _resource_to_filename,
     filename_to_url,
     get_from_cache,
     cached_path,
-    _split_s3_path,
-    _split_gcs_path,
     CacheFile,
     Meta,
 )
@@ -116,12 +114,12 @@ class TestFileUtils(BaseTestClass):
         # Ensures `cached_path` just returns the path to the latest cached version
         # of the resource when there's no internet connection.
 
-        # First we mock the `_http_etag` method so that it raises a `ConnectionError`,
+        # First we mock the `get_etag` method so that it raises a `ConnectionError`,
         # like it would if there was no internet connection.
-        def mocked_http_etag(url: str):
+        def mocked_http_etag(self):
             raise ConnectionError
 
-        monkeypatch.setattr(file_utils, "_http_etag", mocked_http_etag)
+        monkeypatch.setattr(HttpCacher, "get_etag", mocked_http_etag)
 
         url = "https://github.com/allenai/allennlp/blob/master/some-fake-resource"
 
@@ -218,28 +216,6 @@ class TestFileUtils(BaseTestClass):
             back_to_url, etag = filename_to_url(filename, cache_dir=self.TEST_DIR)
             assert back_to_url == url
             assert etag == "mytag"
-
-    def test_split_s3_path(self):
-        # Test splitting good urls.
-        assert _split_s3_path("s3://my-bucket/subdir/file.txt") == ("my-bucket", "subdir/file.txt")
-        assert _split_s3_path("s3://my-bucket/file.txt") == ("my-bucket", "file.txt")
-
-        # Test splitting bad urls.
-        with pytest.raises(ValueError):
-            _split_s3_path("s3://")
-            _split_s3_path("s3://myfile.txt")
-            _split_s3_path("myfile.txt")
-
-    def test_split_gcs_path(self):
-        # Test splitting good urls.
-        assert _split_gcs_path("gs://my-bucket/subdir/file.txt") == ("my-bucket", "subdir/file.txt")
-        assert _split_gcs_path("gs://my-bucket/file.txt") == ("my-bucket", "file.txt")
-
-        # Test splitting bad urls.
-        with pytest.raises(ValueError):
-            _split_gcs_path("gs://")
-            _split_gcs_path("gs://myfile.txt")
-            _split_gcs_path("myfile.txt")
 
     @responses.activate
     def test_get_from_cache(self):

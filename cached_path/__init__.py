@@ -10,34 +10,17 @@ import tempfile
 import json
 from urllib.parse import urlparse
 from pathlib import Path
-from typing import (
-    Optional,
-    Tuple,
-    IO,
-    Callable,
-    List,
-)
+from typing import Optional, Tuple, List
 from hashlib import sha256
-from functools import wraps
 from zipfile import ZipFile, is_zipfile
 import tarfile
 import shutil
-
-import boto3
-import botocore
-from google.cloud import storage
-from google.api_core.exceptions import NotFound
-import requests
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
-import huggingface_hub as hf_hub
 
 from cached_path.cache_file import CacheFile
 from cached_path.common import PathOrStr
 from cached_path.file_lock import FileLock
 from cached_path.meta import Meta
-from cached_path.tqdm import Tqdm
-from cached_path.version import VERSION
+from cached_path.protocols import get_cacher, hf_get_from_cache
 
 logger = logging.getLogger(__name__)
 
@@ -313,160 +296,6 @@ def is_url_or_existing_file(url_or_filename: PathOrStr) -> bool:
     return parsed.scheme in ("http", "https", "s3", "gs") or os.path.exists(url_or_filename)
 
 
-def _split_s3_path(url: str) -> Tuple[str, str]:
-    return _split_cloud_path(url, "s3")
-
-
-def _split_gcs_path(url: str) -> Tuple[str, str]:
-    return _split_cloud_path(url, "gs")
-
-
-def _split_cloud_path(url: str, provider: str) -> Tuple[str, str]:
-    """Split a full s3 path into the bucket name and path."""
-    parsed = urlparse(url)
-    if not parsed.netloc or not parsed.path:
-        raise ValueError("bad {} path {}".format(provider, url))
-    bucket_name = parsed.netloc
-    provider_path = parsed.path
-    # Remove '/' at beginning of path.
-    if provider_path.startswith("/"):
-        provider_path = provider_path[1:]
-    return bucket_name, provider_path
-
-
-def _s3_request(func: Callable):
-    """
-    Wrapper function for s3 requests in order to create more helpful error
-    messages.
-    """
-
-    @wraps(func)
-    def wrapper(url: str, *args, **kwargs):
-        try:
-            return func(url, *args, **kwargs)
-        except botocore.exceptions.ClientError as exc:
-            if int(exc.response["Error"]["Code"]) == 404:
-                raise FileNotFoundError("file {} not found".format(url))
-            else:
-                raise
-
-    return wrapper
-
-
-def _get_s3_resource():
-    session = boto3.session.Session()
-    if session.get_credentials() is None:
-        # Use unsigned requests.
-        s3_resource = session.resource(
-            "s3", config=botocore.client.Config(signature_version=botocore.UNSIGNED)
-        )
-    else:
-        s3_resource = session.resource("s3")
-    return s3_resource
-
-
-@_s3_request
-def _s3_etag(url: str) -> Optional[str]:
-    """Check ETag on S3 object."""
-    s3_resource = _get_s3_resource()
-    bucket_name, s3_path = _split_s3_path(url)
-    s3_object = s3_resource.Object(bucket_name, s3_path)
-    return s3_object.e_tag
-
-
-@_s3_request
-def _s3_get(url: str, temp_file: IO) -> None:
-    """Pull a file directly from S3."""
-    s3_resource = _get_s3_resource()
-    bucket_name, s3_path = _split_s3_path(url)
-    s3_resource.Bucket(bucket_name).download_fileobj(s3_path, temp_file)
-
-
-def _gcs_request(func: Callable):
-    """
-    Wrapper function for gcs requests in order to create more helpful error
-    messages.
-    """
-
-    @wraps(func)
-    def wrapper(url: str, *args, **kwargs):
-        try:
-            return func(url, *args, **kwargs)
-        except NotFound:
-            raise FileNotFoundError("file {} not found".format(url))
-
-    return wrapper
-
-
-def _get_gcs_client():
-    storage_client = storage.Client()
-    return storage_client
-
-
-def _get_gcs_blob(url: str) -> storage.blob.Blob:
-    gcs_resource = _get_gcs_client()
-    bucket_name, gcs_path = _split_gcs_path(url)
-    bucket = gcs_resource.bucket(bucket_name)
-    blob = bucket.blob(gcs_path)
-    return blob
-
-
-@_gcs_request
-def _gcs_md5(url: str) -> Optional[str]:
-    """Get GCS object's md5."""
-    blob = _get_gcs_blob(url)
-    return blob.md5_hash
-
-
-@_gcs_request
-def _gcs_get(url: str, temp_filename: str) -> None:
-    """Pull a file directly from GCS."""
-    blob = _get_gcs_blob(url)
-    blob.download_to_filename(temp_filename)
-
-
-def _session_with_backoff() -> requests.Session:
-    """
-    We ran into an issue where http requests to s3 were timing out,
-    possibly because we were making too many requests too quickly.
-    This helper function returns a requests session that has retry-with-backoff
-    built in. See
-    <https://stackoverflow.com/questions/23267409/how-to-implement-retry-mechanism-into-python-requests-library>.
-    """
-    session = requests.Session()
-    retries = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504])
-    session.mount("http://", HTTPAdapter(max_retries=retries))
-    session.mount("https://", HTTPAdapter(max_retries=retries))
-
-    return session
-
-
-def _http_etag(url: str) -> Optional[str]:
-    with _session_with_backoff() as session:
-        response = session.head(url, allow_redirects=True)
-    if response.status_code != 200:
-        raise OSError(
-            "HEAD request failed for url {} with status code {}".format(url, response.status_code)
-        )
-    return response.headers.get("ETag")
-
-
-def _http_get(url: str, temp_file: IO) -> None:
-    with _session_with_backoff() as session:
-        req = session.get(url, stream=True)
-        req.raise_for_status()
-        content_length = req.headers.get("Content-Length")
-        total = int(content_length) if content_length is not None else None
-        progress = Tqdm.tqdm(
-            unit="iB", unit_scale=True, unit_divisor=1024, total=total, desc="downloading"
-        )
-        for chunk in req.iter_content(chunk_size=1024):
-            if chunk:  # filter out keep-alive new chunks
-                progress.update(len(chunk))
-                temp_file.write(chunk)
-        progress.close()
-
-
 def _find_latest_cached(url: str, cache_dir: PathOrStr) -> Optional[str]:
     filename = _resource_to_filename(url)
     cache_path = os.path.join(cache_dir, filename)
@@ -483,90 +312,20 @@ def _find_latest_cached(url: str, cache_dir: PathOrStr) -> Optional[str]:
     return None
 
 
-def _hf_hub_download(
-    url, model_identifier: str, filename: Optional[str], cache_dir: PathOrStr = CACHE_DIRECTORY
-) -> str:
-    revision: Optional[str]
-    if "@" in model_identifier:
-        repo_id = model_identifier.split("@")[0]
-        revision = model_identifier.split("@")[1]
-    else:
-        repo_id = model_identifier
-        revision = None
-
-    if filename is not None:
-        hub_url = hf_hub.hf_hub_url(repo_id=repo_id, filename=filename, revision=revision)
-        cache_path = str(
-            hf_hub.cached_download(
-                url=hub_url,
-                library_name="cached_path",
-                library_version=VERSION,
-                cache_dir=cache_dir,
-            )
-        )
-        # HF writes it's own meta '.json' file which uses the same format we used to use and still
-        # support, but is missing some fields that we like to have.
-        # So we overwrite it when it we can.
-        with FileLock(cache_path + ".lock", read_only_ok=True):
-            meta = Meta.from_path(cache_path + ".json")
-            # The file HF writes will have 'resource' set to the 'http' URL corresponding to the 'hf://' URL,
-            # but we want 'resource' to be the original 'hf://' URL.
-            if meta.resource != url:
-                meta.resource = url
-                meta.to_file()
-    else:
-        cache_path = str(hf_hub.snapshot_download(repo_id, revision=revision, cache_dir=cache_dir))
-        # Need to write the meta file for snapshot downloads if it doesn't exist.
-        with FileLock(cache_path + ".lock", read_only_ok=True):
-            if not os.path.exists(cache_path + ".json"):
-                meta = Meta.new(
-                    url,
-                    cache_path,
-                    extraction_dir=True,
-                )
-                meta.to_file()
-    return cache_path
-
-
-# TODO(joelgrus): do we want to do checksums or anything like that?
 def get_from_cache(url: str, cache_dir: PathOrStr = CACHE_DIRECTORY) -> str:
     """
     Given a URL, look for the corresponding dataset in the local cache.
     If it's not there, download it. Then return the path to the cached file.
     """
     if url.startswith("hf://"):
-        # Remove the 'hf://' prefix
-        identifier = url[5:]
+        return hf_get_from_cache(url, cache_dir)
 
-        if identifier.count("/") > 1:
-            filename = "/".join(identifier.split("/")[2:])
-            model_identifier = "/".join(identifier.split("/")[:2])
-            return _hf_hub_download(url, model_identifier, filename, cache_dir)
-        elif identifier.count("/") == 1:
-            # 'hf://' URLs like 'hf://xxxx/yyyy' are potentially ambiguous,
-            # because this could refer to either:
-            #  1. the file 'yyyy' in the 'xxxx' repository, or
-            #  2. the repo 'yyyy' under the user/org name 'xxxx'.
-            # We default to (1), but if we get a 404 error then we try (2).
-            try:
-                model_identifier, filename = identifier.split("/")
-                return _hf_hub_download(url, model_identifier, filename, cache_dir)
-            except requests.exceptions.HTTPError as exc:
-                if exc.response.status_code == 404:
-                    return _hf_hub_download(url, identifier, None, cache_dir)
-                raise
-        else:
-            return _hf_hub_download(url, identifier, None, cache_dir)
+    cacher = get_cacher(url)
 
     # Get eTag to add to filename, if it exists.
     try:
-        if url.startswith("s3://"):
-            etag = _s3_etag(url)
-        elif url.startswith("gs://"):
-            etag = _gcs_md5(url)
-        else:
-            etag = _http_etag(url)
-    except (requests.exceptions.ConnectionError, botocore.exceptions.EndpointConnectionError):
+        etag = cacher.get_etag()
+    except cacher.ConnectionErrorTypes:  # type: ignore
         # We might be offline, in which case we don't want to throw an error
         # just yet. Instead, we'll try to use the latest cached version of the
         # target resource, if it exists. We'll only throw an exception if we
@@ -614,14 +373,7 @@ def get_from_cache(url: str, cache_dir: PathOrStr = CACHE_DIRECTORY) -> str:
         else:
             with CacheFile(cache_path) as cache_file:
                 logger.info("%s not found in cache, downloading to %s", url, cache_path)
-
-                # GET file object
-                if url.startswith("s3://"):
-                    _s3_get(url, cache_file)
-                elif url.startswith("gs://"):
-                    _gcs_get(url, cache_file.name)
-                else:
-                    _http_get(url, cache_file)
+                cacher.get_resource(cache_file)
 
             logger.debug("creating metadata file for %s", cache_path)
             meta = Meta.new(
