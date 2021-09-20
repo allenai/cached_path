@@ -32,6 +32,7 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 import huggingface_hub as hf_hub
 
+from cached_path.cache_file import CacheFile
 from cached_path.common import PathOrStr
 from cached_path.file_lock import FileLock
 from cached_path.meta import Meta
@@ -302,8 +303,8 @@ def cached_path(
 
 def is_url_or_existing_file(url_or_filename: PathOrStr) -> bool:
     """
-    Given something that might be a URL (or might be a local path),
-    determine check if it's url or an existing file path.
+    Given something that might be a URL or local path,
+    determine if it's actually a url or the path to an existing file.
     """
     if url_or_filename is None:
         return False
@@ -480,46 +481,6 @@ def _find_latest_cached(url: str, cache_dir: PathOrStr) -> Optional[str]:
     if candidates:
         return candidates[0][0]
     return None
-
-
-class CacheFile:
-    """
-    This is a context manager that makes robust caching easier.
-
-    On `__enter__`, an IO handle to a temporarily file is returned, which can
-    be treated as if it's the actual cache file.
-
-    On `__exit__`, the temporarily file is renamed to the cache file. If anything
-    goes wrong while writing to the temporary file, it will be removed.
-    """
-
-    def __init__(self, cache_filename: PathOrStr, mode: str = "w+b", suffix: str = ".tmp") -> None:
-        self.cache_filename = (
-            cache_filename if isinstance(cache_filename, Path) else Path(cache_filename)
-        )
-        self.cache_directory = os.path.dirname(self.cache_filename)
-        self.mode = mode
-        self.temp_file = tempfile.NamedTemporaryFile(
-            self.mode, dir=self.cache_directory, delete=False, suffix=suffix
-        )
-
-    def __enter__(self):
-        return self.temp_file
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.temp_file.close()
-        if exc_value is None:
-            # Success.
-            logger.debug(
-                "Renaming temp file %s to cache at %s", self.temp_file.name, self.cache_filename
-            )
-            # Rename the temp file to the actual cache filename.
-            os.replace(self.temp_file.name, self.cache_filename)
-            return True
-        # Something went wrong, remove the temp file.
-        logger.debug("removing temp file %s", self.temp_file.name)
-        os.remove(self.temp_file.name)
-        return False
 
 
 def _hf_hub_download(
