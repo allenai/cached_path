@@ -1,8 +1,12 @@
+import os
 from os import PathLike
+from pathlib import Path
 from urllib.parse import urlparse
 from typing import Union, Tuple
 
 PathOrStr = Union[str, PathLike]
+
+CACHE_DIRECTORY = Path(os.getenv("CACHED_PATH_CACHE_ROOT", Path.home() / ".cache" / "cached_path"))
 
 
 def _split_cloud_path(url: str, provider: str) -> Tuple[str, str]:
