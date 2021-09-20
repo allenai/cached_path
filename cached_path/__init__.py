@@ -8,17 +8,13 @@ import os
 import logging
 import tempfile
 import json
-from dataclasses import dataclass, asdict
-from os import PathLike
 from urllib.parse import urlparse
 from pathlib import Path
 from typing import (
     Optional,
     Tuple,
-    Union,
     IO,
     Callable,
-    Set,
     List,
 )
 from hashlib import sha256
@@ -26,7 +22,6 @@ from functools import wraps
 from zipfile import ZipFile, is_zipfile
 import tarfile
 import shutil
-import time
 import warnings
 
 import boto3
@@ -40,14 +35,14 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 import huggingface_hub as hf_hub
 
+from cached_path.common import PathOrStr
 from cached_path.version import VERSION
 from cached_path.tqdm import Tqdm
+from cached_path.meta import Meta
 
 logger = logging.getLogger(__name__)
 
 CACHE_DIRECTORY = Path(os.getenv("CACHED_PATH_CACHE_ROOT", Path.home() / ".cache" / "cached_path"))
-
-PathOrStr = Union[str, PathLike]
 
 
 class FileLock(_FileLock):
@@ -331,12 +326,10 @@ def cached_path(
                 # Extraction was successful, rename temp directory to final
                 # cache directory and dump the meta data.
                 os.replace(tmp_extraction_dir, extraction_path)
-                meta = _Meta(
-                    resource=url_or_filename,
-                    cached_path=extraction_path,
-                    creation_time=time.time(),
+                meta = Meta.new(
+                    url_or_filename,
+                    extraction_path,
                     extraction_dir=True,
-                    size=_get_resource_size(extraction_path),
                 )
                 meta.to_file()
             finally:
@@ -569,72 +562,6 @@ class CacheFile:
         return False
 
 
-@dataclass
-class _Meta:
-    """
-    Any resource that is downloaded to - or extracted in - the cache directory will
-    have a meta JSON file written next to it, which corresponds to an instance
-    of this class.
-
-    In older versions of AllenNLP, this meta document just had two fields: 'url' and
-    'etag'. The 'url' field is now the more general 'resource' field, but these old
-    meta files are still compatible when a `_Meta` is instantiated with the `.from_path()`
-    class method.
-    """
-
-    resource: str
-    """
-    URL or normalized path to the resource.
-    """
-
-    cached_path: str
-    """
-    Path to the corresponding cached version of the resource.
-    """
-
-    creation_time: float
-    """
-    The unix timestamp of when the corresponding resource was cached or extracted.
-    """
-
-    size: int = 0
-    """
-    The size of the corresponding resource, in bytes.
-    """
-
-    etag: Optional[str] = None
-    """
-    Optional ETag associated with the current cached version of the resource.
-    """
-
-    extraction_dir: bool = False
-    """
-    Does this meta corresponded to an extraction directory?
-    """
-
-    def to_file(self) -> None:
-        with open(self.cached_path + ".json", "w") as meta_file:
-            json.dump(asdict(self), meta_file)
-
-    @classmethod
-    def from_path(cls, path: PathOrStr) -> "_Meta":
-        path = str(path)
-        with open(path) as meta_file:
-            data = json.load(meta_file)
-            # For backwards compat:
-            if "resource" not in data:
-                data["resource"] = data.pop("url")
-            if "creation_time" not in data:
-                data["creation_time"] = os.path.getmtime(path[:-5])
-            if "extraction_dir" not in data and path.endswith("-extracted.json"):
-                data["extraction_dir"] = True
-            if "cached_path" not in data:
-                data["cached_path"] = path[:-5]
-            if "size" not in data:
-                data["size"] = _get_resource_size(data["cached_path"])
-        return cls(**data)
-
-
 def _hf_hub_download(
     url, model_identifier: str, filename: Optional[str], cache_dir: PathOrStr = CACHE_DIRECTORY
 ) -> str:
@@ -660,7 +587,7 @@ def _hf_hub_download(
         # support, but is missing some fields that we like to have.
         # So we overwrite it when it we can.
         with FileLock(cache_path + ".lock", read_only_ok=True):
-            meta = _Meta.from_path(cache_path + ".json")
+            meta = Meta.from_path(cache_path + ".json")
             # The file HF writes will have 'resource' set to the 'http' URL corresponding to the 'hf://' URL,
             # but we want 'resource' to be the original 'hf://' URL.
             if meta.resource != url:
@@ -671,12 +598,10 @@ def _hf_hub_download(
         # Need to write the meta file for snapshot downloads if it doesn't exist.
         with FileLock(cache_path + ".lock", read_only_ok=True):
             if not os.path.exists(cache_path + ".json"):
-                meta = _Meta(
-                    resource=url,
-                    cached_path=cache_path,
-                    creation_time=time.time(),
+                meta = Meta.new(
+                    url,
+                    cache_path,
                     extraction_dir=True,
-                    size=_get_resource_size(cache_path),
                 )
                 meta.to_file()
     return cache_path
@@ -778,33 +703,11 @@ def get_from_cache(url: str, cache_dir: PathOrStr = CACHE_DIRECTORY) -> str:
                     _http_get(url, cache_file)
 
             logger.debug("creating metadata file for %s", cache_path)
-            meta = _Meta(
-                resource=url,
-                cached_path=cache_path,
-                creation_time=time.time(),
+            meta = Meta.new(
+                url,
+                cache_path,
                 etag=etag,
-                size=_get_resource_size(cache_path),
             )
             meta.to_file()
 
     return cache_path
-
-
-def _get_resource_size(path: str) -> int:
-    """
-    Get the size of a file or directory.
-    """
-    if os.path.isfile(path):
-        return os.path.getsize(path)
-    inodes: Set[int] = set()
-    total_size = 0
-    for dirpath, dirnames, filenames in os.walk(path):
-        for f in filenames:
-            fp = os.path.join(dirpath, f)
-            # skip if it is symbolic link or the same as a file we've already accounted
-            # for (this could happen with hard links).
-            inode = os.stat(fp).st_ino
-            if not os.path.islink(fp) and inode not in inodes:
-                inodes.add(inode)
-                total_size += os.path.getsize(fp)
-    return total_size

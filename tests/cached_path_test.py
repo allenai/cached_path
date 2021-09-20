@@ -20,7 +20,7 @@ from cached_path import (
     _split_s3_path,
     _split_gcs_path,
     CacheFile,
-    _Meta,
+    Meta,
 )
 
 from cached_path.testing import BaseTestClass
@@ -131,7 +131,7 @@ class TestFileUtils(BaseTestClass):
             os.path.join(self.TEST_DIR, _resource_to_filename(url, etag)) for etag in etags
         ]
         for filename, etag in zip(filenames, etags):
-            meta = _Meta(
+            meta = Meta(
                 resource=url, cached_path=filename, creation_time=time.time(), etag=etag, size=2341
             )
             meta.to_file()
@@ -152,7 +152,7 @@ class TestFileUtils(BaseTestClass):
         # We also want to make sure this works when the latest cached version doesn't
         # have a corresponding etag.
         filename = os.path.join(self.TEST_DIR, _resource_to_filename(url))
-        meta = _Meta(resource=url, cached_path=filename, creation_time=time.time(), size=2341)
+        meta = Meta(resource=url, cached_path=filename, creation_time=time.time(), size=2341)
         with open(filename, "w") as f:
             f.write("some random data")
 
@@ -249,7 +249,7 @@ class TestFileUtils(BaseTestClass):
         filename = get_from_cache(url, cache_dir=self.TEST_DIR)
         assert filename == os.path.join(self.TEST_DIR, _resource_to_filename(url, etag="0"))
         assert os.path.exists(filename + ".json")
-        meta = _Meta.from_path(filename + ".json")
+        meta = Meta.from_path(filename + ".json")
         assert meta.resource == url
 
         # We should have made one HEAD request and one GET request.
@@ -428,7 +428,7 @@ class TestHFHubDownload(BaseTestClass):
         assert os.path.isfile(path)
         assert pathlib.Path(os.path.dirname(path)) == self.TEST_DIR
         assert os.path.isfile(path + ".json")
-        meta = _Meta.from_path(path + ".json")
+        meta = Meta.from_path(path + ".json")
         assert meta.etag is not None
         assert meta.resource == "hf://t5-small/config.json"
 
@@ -438,5 +438,5 @@ class TestHFHubDownload(BaseTestClass):
         path = cached_path(f"hf://{model_name}")
         assert os.path.isdir(path)
         assert os.path.isfile(path + ".json")
-        meta = _Meta.from_path(path + ".json")
+        meta = Meta.from_path(path + ".json")
         assert meta.resource == f"hf://{model_name}"
