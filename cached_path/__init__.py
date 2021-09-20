@@ -5,7 +5,6 @@ This can be used behind other APIs that need to access files agnostic to where t
 
 from cached_path._cached_path import cached_path
 from cached_path.common import CACHE_DIRECTORY
-from cached_path.meta import Meta
 from cached_path.util import (
     resource_to_filename,
     filename_to_url,
