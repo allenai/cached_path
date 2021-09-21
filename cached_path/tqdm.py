@@ -9,7 +9,7 @@ import sys
 from time import time
 from typing import Optional
 
-from cached_path.common import FILE_FRIENDLY_LOGGING
+from cached_path import common
 
 try:
     SHELL = str(type(get_ipython()))  # type:ignore # noqa: F821
@@ -56,7 +56,7 @@ class TqdmToLogsWriter(object):
 
     def write(self, message):
         file_friendly_message: Optional[str] = None
-        if os.environ.get("FILE_FRIENDLY_LOGGING", False):
+        if common.FILE_FRIENDLY_LOGGING:
             file_friendly_message = replace_cr_with_newline(message)
             if file_friendly_message.strip():
                 sys.stderr.write(file_friendly_message)
@@ -82,7 +82,7 @@ class Tqdm:
     @staticmethod
     def tqdm(*args, **kwargs):
         # Use a slower interval when FILE_FRIENDLY_LOGGING is set.
-        default_mininterval = 2.0 if FILE_FRIENDLY_LOGGING else 0.1
+        default_mininterval = 2.0 if common.FILE_FRIENDLY_LOGGING else 0.1
 
         new_kwargs = {
             "file": TqdmToLogsWriter(),
