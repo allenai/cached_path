@@ -55,7 +55,7 @@ def get_cache_dir() -> PathOrStr:
 
 def file_friendly_logging(on: bool = True) -> None:
     """
-    Turn on (or off) file-friendly logging on globally.
+    Turn on (or off) file-friendly logging globally.
     """
     global FILE_FRIENDLY_LOGGING
     FILE_FRIENDLY_LOGGING = on
