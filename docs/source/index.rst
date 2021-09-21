@@ -26,6 +26,13 @@ Contents
    api/cached_path
    api/util
 
+.. toctree::
+   :hidden:
+   :caption: Development
+
+   License <https://raw.githubusercontent.com/allenai/cached_path/main/LICENSE>
+   GitHub Repository <https://github.com/allenai/cached_path>
+
 Team
 ----
 

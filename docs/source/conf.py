@@ -15,12 +15,16 @@ import sys
 
 sys.path.insert(0, os.path.abspath("../../"))
 
+from cached_path.version import VERSION, VERSION_SHORT
+
 
 # -- Project information -----------------------------------------------------
 
 project = "cached-path"
 copyright = "2021, Allen Institute for Artificial Intelligence"
 author = "Allen Institute for Artificial Intelligence"
+version = VERSION_SHORT
+release = VERSION
 
 
 # -- General configuration ---------------------------------------------------
