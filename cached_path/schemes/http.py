@@ -6,7 +6,7 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
 from cached_path.tqdm import Tqdm
-from cached_path.schemes.cacher import Cacher
+from cached_path.schemes.scheme_client import SchemeClient
 
 
 def session_with_backoff() -> requests.Session:
@@ -25,7 +25,7 @@ def session_with_backoff() -> requests.Session:
     return session
 
 
-class HttpCacher(Cacher):
+class HttpClient(SchemeClient):
     @overrides
     def get_etag(self) -> Optional[str]:
         with session_with_backoff() as session:

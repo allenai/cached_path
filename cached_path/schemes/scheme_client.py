@@ -3,7 +3,7 @@ from typing import Optional, IO, Tuple, ClassVar
 import requests
 
 
-class Cacher:
+class SchemeClient:
     ConnectionErrorTypes: ClassVar[Tuple[BaseException, ...]] = (
         requests.exceptions.ConnectionError,
     )

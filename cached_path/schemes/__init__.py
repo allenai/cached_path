@@ -1,13 +1,13 @@
-from cached_path.schemes.cacher import Cacher
-from cached_path.schemes.http import HttpCacher
+from cached_path.schemes.scheme_client import SchemeClient
+from cached_path.schemes.http import HttpClient
 from cached_path.schemes.hf import hf_get_from_cache
-from cached_path.schemes.s3 import S3Cacher
-from cached_path.schemes.gs import GsCacher
+from cached_path.schemes.s3 import S3Client
+from cached_path.schemes.gs import GsClient
 
 
-def get_cacher(resource: str) -> Cacher:
+def get_scheme_client(resource: str) -> SchemeClient:
     if resource.startswith("s3://"):
-        return S3Cacher(resource)
+        return S3Client(resource)
     if resource.startswith("gs://"):
-        return GsCacher(resource)
-    return HttpCacher(resource)
+        return GsClient(resource)
+    return HttpClient(resource)

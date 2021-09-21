@@ -14,7 +14,7 @@ from cached_path._cached_path import (
     get_from_cache,
     cached_path,
 )
-from cached_path.protocols import HttpCacher
+from cached_path.schemes import HttpClient
 from cached_path.testing import BaseTestClass
 
 
@@ -67,7 +67,7 @@ class TestCachedPath(BaseTestClass):
         def mocked_http_etag(self):
             raise ConnectionError
 
-        monkeypatch.setattr(HttpCacher, "get_etag", mocked_http_etag)
+        monkeypatch.setattr(HttpClient, "get_etag", mocked_http_etag)
 
         url = "https://github.com/allenai/allennlp/blob/master/some-fake-resource"
 

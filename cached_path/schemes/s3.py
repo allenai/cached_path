@@ -10,11 +10,11 @@ import botocore
 from overrides import overrides
 
 from cached_path.common import _split_cloud_path
-from cached_path.schemes.cacher import Cacher
+from cached_path.schemes.scheme_client import SchemeClient
 
 
-class S3Cacher(Cacher):
-    ConnectionErrorTypes = Cacher.ConnectionErrorTypes + (
+class S3Client(SchemeClient):
+    ConnectionErrorTypes = SchemeClient.ConnectionErrorTypes + (
         botocore.exceptions.EndpointConnectionError,
     )
 

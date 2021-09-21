@@ -15,7 +15,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Renamed `protocols` submodule to `schemes`.
 - `_Meta` dataclass renamed to `Meta`.
 - `FileLock` moved to `cached_path.file_lock`.
 - `CacheFile` moved to `cached_path.cache_file`.

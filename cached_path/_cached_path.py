@@ -11,7 +11,7 @@ from cached_path.cache_file import CacheFile
 from cached_path.common import PathOrStr, get_cache_dir
 from cached_path.file_lock import FileLock
 from cached_path.meta import Meta
-from cached_path.schemes import get_cacher, hf_get_from_cache
+from cached_path.schemes import get_scheme_client, hf_get_from_cache
 from cached_path.util import (
     resource_to_filename,
     find_latest_cached,
@@ -238,12 +238,12 @@ def get_from_cache(url: str, cache_dir: Optional[PathOrStr] = None) -> str:
     if url.startswith("hf://"):
         return hf_get_from_cache(url, cache_dir)
 
-    cacher = get_cacher(url)
+    client = get_scheme_client(url)
 
     # Get eTag to add to filename, if it exists.
     try:
-        etag = cacher.get_etag()
-    except cacher.ConnectionErrorTypes:  # type: ignore
+        etag = client.get_etag()
+    except client.ConnectionErrorTypes:  # type: ignore
         # We might be offline, in which case we don't want to throw an error
         # just yet. Instead, we'll try to use the latest cached version of the
         # target resource, if it exists. We'll only throw an exception if we
@@ -291,7 +291,7 @@ def get_from_cache(url: str, cache_dir: Optional[PathOrStr] = None) -> str:
         else:
             with CacheFile(cache_path) as cache_file:
                 logger.info("%s not found in cache, downloading to %s", url, cache_path)
-                cacher.get_resource(cache_file)
+                client.get_resource(cache_file)
 
             logger.debug("creating metadata file for %s", cache_path)
             meta = Meta.new(

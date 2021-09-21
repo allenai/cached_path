@@ -10,10 +10,10 @@ from google.api_core.exceptions import NotFound
 from overrides import overrides
 
 from cached_path.common import _split_cloud_path
-from cached_path.schemes.cacher import Cacher
+from cached_path.schemes.scheme_client import SchemeClient
 
 
-class GsCacher(Cacher):
+class GsClient(SchemeClient):
     @overrides
     def get_etag(self) -> Optional[str]:
         return gcs_md5(self.resource)
@@ -43,13 +43,8 @@ def gcs_request(func: Callable):
     return wrapper
 
 
-def get_gcs_client():
-    storage_client = storage.Client()
-    return storage_client
-
-
 def get_gcs_blob(url: str) -> storage.blob.Blob:
-    gcs_resource = get_gcs_client()
+    gcs_resource = storage.Client()
     bucket_name, gcs_path = split_gcs_path(url)
     bucket = gcs_resource.bucket(bucket_name)
     blob = bucket.blob(gcs_path)
