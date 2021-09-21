@@ -1,28 +1,20 @@
 from collections import Counter
-import json
 import os
 import shutil
 import time
 import pathlib
 
-from filelock import Timeout
 import pytest
 import responses
 from requests.exceptions import ConnectionError, HTTPError
 
-import cached_path as file_utils
-from cached_path import (
-    FileLock,
-    _resource_to_filename,
-    filename_to_url,
+from cached_path.util import resource_to_filename
+from cached_path.meta import Meta
+from cached_path._cached_path import (
     get_from_cache,
     cached_path,
-    _split_s3_path,
-    _split_gcs_path,
-    CacheFile,
-    _Meta,
 )
-
+from cached_path.protocols import HttpCacher
 from cached_path.testing import BaseTestClass
 
 
@@ -59,53 +51,7 @@ def set_up_glove(url: str, byt: bytes, change_etag_every: int = 1000):
     responses.add_callback(responses.HEAD, url, callback=head_callback)
 
 
-class TestFileLock(BaseTestClass):
-    def setup_method(self):
-        super().setup_method()
-
-        # Set up a regular lock and a read-only lock.
-        open(self.TEST_DIR / "lock", "a").close()
-        open(self.TEST_DIR / "read_only_lock", "a").close()
-        os.chmod(self.TEST_DIR / "read_only_lock", 0o555)
-
-        # Also set up a read-only directory.
-        os.mkdir(self.TEST_DIR / "read_only_dir", 0o555)
-
-    def test_locking(self):
-        with FileLock(self.TEST_DIR / "lock"):
-            # Trying to acquire the lock again should fail.
-            with pytest.raises(Timeout):
-                with FileLock(self.TEST_DIR / "lock", timeout=0.1):
-                    pass
-
-        # Trying to acquire a lock when lacking write permissions on the file should fail.
-        with pytest.raises(PermissionError):
-            with FileLock(self.TEST_DIR / "read_only_lock"):
-                pass
-
-        # But this should only issue a warning if we set the `read_only_ok` flag to `True`.
-        with pytest.warns(UserWarning, match="Lacking permissions"):
-            with FileLock(self.TEST_DIR / "read_only_lock", read_only_ok=True):
-                pass
-
-        # However this should always fail when we lack write permissions and the file lock
-        # doesn't exist yet.
-        with pytest.raises(PermissionError):
-            with FileLock(self.TEST_DIR / "read_only_dir" / "lock", read_only_ok=True):
-                pass
-
-
-class TestCacheFile(BaseTestClass):
-    def test_temp_file_removed_on_error(self):
-        cache_filename = self.TEST_DIR / "cache_file"
-        with pytest.raises(IOError, match="I made this up"):
-            with CacheFile(cache_filename) as handle:
-                raise IOError("I made this up")
-        assert not os.path.exists(handle.name)
-        assert not os.path.exists(cache_filename)
-
-
-class TestFileUtils(BaseTestClass):
+class TestCachedPath(BaseTestClass):
     def setup_method(self):
         super().setup_method()
         self.glove_file = self.FIXTURES_ROOT / "embeddings/glove.6B.100d.sample.txt.gz"
@@ -116,22 +62,20 @@ class TestFileUtils(BaseTestClass):
         # Ensures `cached_path` just returns the path to the latest cached version
         # of the resource when there's no internet connection.
 
-        # First we mock the `_http_etag` method so that it raises a `ConnectionError`,
+        # First we mock the `get_etag` method so that it raises a `ConnectionError`,
         # like it would if there was no internet connection.
-        def mocked_http_etag(url: str):
+        def mocked_http_etag(self):
             raise ConnectionError
 
-        monkeypatch.setattr(file_utils, "_http_etag", mocked_http_etag)
+        monkeypatch.setattr(HttpCacher, "get_etag", mocked_http_etag)
 
         url = "https://github.com/allenai/allennlp/blob/master/some-fake-resource"
 
         # We'll create two cached versions of this fake resource using two different etags.
         etags = ['W/"3e5885bfcbf4c47bc4ee9e2f6e5ea916"', 'W/"3e5885bfcbf4c47bc4ee9e2f6e5ea918"']
-        filenames = [
-            os.path.join(self.TEST_DIR, _resource_to_filename(url, etag)) for etag in etags
-        ]
+        filenames = [os.path.join(self.TEST_DIR, resource_to_filename(url, etag)) for etag in etags]
         for filename, etag in zip(filenames, etags):
-            meta = _Meta(
+            meta = Meta(
                 resource=url, cached_path=filename, creation_time=time.time(), etag=etag, size=2341
             )
             meta.to_file()
@@ -151,95 +95,12 @@ class TestFileUtils(BaseTestClass):
 
         # We also want to make sure this works when the latest cached version doesn't
         # have a corresponding etag.
-        filename = os.path.join(self.TEST_DIR, _resource_to_filename(url))
-        meta = _Meta(resource=url, cached_path=filename, creation_time=time.time(), size=2341)
+        filename = os.path.join(self.TEST_DIR, resource_to_filename(url))
+        meta = Meta(resource=url, cached_path=filename, creation_time=time.time(), size=2341)
         with open(filename, "w") as f:
             f.write("some random data")
 
         assert get_from_cache(url, cache_dir=self.TEST_DIR) == filename
-
-    def test_resource_to_filename(self):
-        for url in [
-            "http://allenai.org",
-            "http://allennlp.org",
-            "https://www.google.com",
-            "http://pytorch.org",
-            "https://allennlp.s3.amazonaws.com" + "/long" * 20 + "/url",
-        ]:
-            filename = _resource_to_filename(url)
-            assert "http" not in filename
-            with pytest.raises(FileNotFoundError):
-                filename_to_url(filename, cache_dir=self.TEST_DIR)
-            pathlib.Path(os.path.join(self.TEST_DIR, filename)).touch()
-            with pytest.raises(FileNotFoundError):
-                filename_to_url(filename, cache_dir=self.TEST_DIR)
-            json.dump(
-                {"url": url, "etag": None},
-                open(os.path.join(self.TEST_DIR, filename + ".json"), "w"),
-            )
-            back_to_url, etag = filename_to_url(filename, cache_dir=self.TEST_DIR)
-            assert back_to_url == url
-            assert etag is None
-
-    def test_resource_to_filename_with_etags(self):
-        for url in [
-            "http://allenai.org",
-            "http://allennlp.org",
-            "https://www.google.com",
-            "http://pytorch.org",
-        ]:
-            filename = _resource_to_filename(url, etag="mytag")
-            assert "http" not in filename
-            pathlib.Path(os.path.join(self.TEST_DIR, filename)).touch()
-            json.dump(
-                {"url": url, "etag": "mytag"},
-                open(os.path.join(self.TEST_DIR, filename + ".json"), "w"),
-            )
-            back_to_url, etag = filename_to_url(filename, cache_dir=self.TEST_DIR)
-            assert back_to_url == url
-            assert etag == "mytag"
-        baseurl = "http://allenai.org/"
-        assert _resource_to_filename(baseurl + "1") != _resource_to_filename(baseurl, etag="1")
-
-    def test_resource_to_filename_with_etags_eliminates_quotes(self):
-        for url in [
-            "http://allenai.org",
-            "http://allennlp.org",
-            "https://www.google.com",
-            "http://pytorch.org",
-        ]:
-            filename = _resource_to_filename(url, etag='"mytag"')
-            assert "http" not in filename
-            pathlib.Path(os.path.join(self.TEST_DIR, filename)).touch()
-            json.dump(
-                {"url": url, "etag": "mytag"},
-                open(os.path.join(self.TEST_DIR, filename + ".json"), "w"),
-            )
-            back_to_url, etag = filename_to_url(filename, cache_dir=self.TEST_DIR)
-            assert back_to_url == url
-            assert etag == "mytag"
-
-    def test_split_s3_path(self):
-        # Test splitting good urls.
-        assert _split_s3_path("s3://my-bucket/subdir/file.txt") == ("my-bucket", "subdir/file.txt")
-        assert _split_s3_path("s3://my-bucket/file.txt") == ("my-bucket", "file.txt")
-
-        # Test splitting bad urls.
-        with pytest.raises(ValueError):
-            _split_s3_path("s3://")
-            _split_s3_path("s3://myfile.txt")
-            _split_s3_path("myfile.txt")
-
-    def test_split_gcs_path(self):
-        # Test splitting good urls.
-        assert _split_gcs_path("gs://my-bucket/subdir/file.txt") == ("my-bucket", "subdir/file.txt")
-        assert _split_gcs_path("gs://my-bucket/file.txt") == ("my-bucket", "file.txt")
-
-        # Test splitting bad urls.
-        with pytest.raises(ValueError):
-            _split_gcs_path("gs://")
-            _split_gcs_path("gs://myfile.txt")
-            _split_gcs_path("myfile.txt")
 
     @responses.activate
     def test_get_from_cache(self):
@@ -247,9 +108,9 @@ class TestFileUtils(BaseTestClass):
         set_up_glove(url, self.glove_bytes, change_etag_every=2)
 
         filename = get_from_cache(url, cache_dir=self.TEST_DIR)
-        assert filename == os.path.join(self.TEST_DIR, _resource_to_filename(url, etag="0"))
+        assert filename == os.path.join(self.TEST_DIR, resource_to_filename(url, etag="0"))
         assert os.path.exists(filename + ".json")
-        meta = _Meta.from_path(filename + ".json")
+        meta = Meta.from_path(filename + ".json")
         assert meta.resource == url
 
         # We should have made one HEAD request and one GET request.
@@ -278,7 +139,7 @@ class TestFileUtils(BaseTestClass):
         # A third call should have a different ETag and should force a new download,
         # which means another HEAD call and another GET call.
         filename3 = get_from_cache(url, cache_dir=self.TEST_DIR)
-        assert filename3 == os.path.join(self.TEST_DIR, _resource_to_filename(url, etag="1"))
+        assert filename3 == os.path.join(self.TEST_DIR, resource_to_filename(url, etag="1"))
 
         method_counts = Counter(call.request.method for call in responses.calls)
         assert len(method_counts) == 2
@@ -308,7 +169,7 @@ class TestFileUtils(BaseTestClass):
         filename = cached_path(url, cache_dir=self.TEST_DIR)
 
         assert len(responses.calls) == 2
-        assert filename == os.path.join(self.TEST_DIR, _resource_to_filename(url, etag="0"))
+        assert filename == os.path.join(self.TEST_DIR, resource_to_filename(url, etag="0"))
 
         with open(filename, "rb") as cached_file:
             assert cached_file.read() == self.glove_bytes
@@ -428,7 +289,7 @@ class TestHFHubDownload(BaseTestClass):
         assert os.path.isfile(path)
         assert pathlib.Path(os.path.dirname(path)) == self.TEST_DIR
         assert os.path.isfile(path + ".json")
-        meta = _Meta.from_path(path + ".json")
+        meta = Meta.from_path(path + ".json")
         assert meta.etag is not None
         assert meta.resource == "hf://t5-small/config.json"
 
@@ -438,5 +299,5 @@ class TestHFHubDownload(BaseTestClass):
         path = cached_path(f"hf://{model_name}")
         assert os.path.isdir(path)
         assert os.path.isfile(path + ".json")
-        meta = _Meta.from_path(path + ".json")
+        meta = Meta.from_path(path + ".json")
         assert meta.resource == f"hf://{model_name}"

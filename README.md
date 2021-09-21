@@ -31,12 +31,11 @@ from cached_path import cached_path
 ```
 
 Given something that might be a URL or local path, `cached_path` determines which.
-If it's a remote resource, it downloads the file and caches it, and
+If it's a remote resource, it downloads the file and caches it to the [cache directory](#cache-directory), and
 then returns the path to the cached file. If it's already a local path,
 it makes sure the file exists and returns the path.
 
-For URLs, "http://", "https://", "s3://", "gs://", and "hf://" are all supported.
-The latter corresponds to the HuggingFace Hub.
+For URLs, `http://`, `https://`, `s3://` (AWS S3), `gs://` (Google Cloud Storage), and `hf://` (HuggingFace Hub) are all supported.
 
 For example, to download the PyTorch weights for the model `epwalsh/bert-xsmall-dummy`
 on HuggingFace, you could do:
@@ -53,6 +52,11 @@ returning the local path to the specific file. For example:
 ```python
 cached_path("model.tar.gz!weights.th", extract_archive=True)
 ```
+
+### Cache directory
+
+By default the cache directory is `~/.cache/cached_path/`, however you can override this by setting the environment variable `CACHED_PATH_CACHE_ROOT` to the directory of your choosing, or by setting
+the `cache_dir` variable when calling `cached_path()`.
 
 ## Team
 
