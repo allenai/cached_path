@@ -1,6 +1,6 @@
 import pytest
 
-from cached_path.protocols.gs import split_gcs_path
+from cached_path.schemes.gs import split_gcs_path
 
 
 def test_split_gcs_path():

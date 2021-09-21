@@ -1,6 +1,6 @@
 import pytest
 
-from cached_path.protocols.s3 import split_s3_path
+from cached_path.schemes.s3 import split_s3_path
 
 
 def test_split_s3_path():

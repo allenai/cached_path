@@ -10,7 +10,7 @@ from google.api_core.exceptions import NotFound
 from overrides import overrides
 
 from cached_path.common import _split_cloud_path
-from cached_path.protocols.cacher import Cacher
+from cached_path.schemes.cacher import Cacher
 
 
 class GsCacher(Cacher):

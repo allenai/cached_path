@@ -6,7 +6,7 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
 from cached_path.tqdm import Tqdm
-from cached_path.protocols.cacher import Cacher
+from cached_path.schemes.cacher import Cacher
 
 
 def session_with_backoff() -> requests.Session:

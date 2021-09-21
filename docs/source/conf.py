@@ -15,7 +15,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath("../../"))
 
-from cached_path.version import VERSION, VERSION_SHORT
+from cached_path.version import VERSION, VERSION_SHORT  # noqa: E402
 
 
 # -- Project information -----------------------------------------------------

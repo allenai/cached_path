@@ -29,7 +29,11 @@ path2 = cached_path("https://github.com/allenai/cached_path/blob/main/README.md"
 assert path2 != path
 ```
 
-In addition to `http://` / `https://`, `cached_path()` supports other protocols such as `s3://` (AWS S3) and `gs://` (Google Cloud Storage). For a full list of supported protocols, check the [API documentation](api/cached_path).
+```{tip}
+In addition to `http` and `https`, `cached_path()` supports several other schemes such as `s3` (AWS S3), `gs` (Google Cloud Storage),
+and `hf` (HuggingFace Hub).
+For a full list of supported schemes and examples, check the [API documentation](api/cached_path).
+```
 
 ## Working with archives
 

@@ -11,7 +11,7 @@ from cached_path.cache_file import CacheFile
 from cached_path.common import PathOrStr, get_cache_dir
 from cached_path.file_lock import FileLock
 from cached_path.meta import Meta
-from cached_path.protocols import get_cacher, hf_get_from_cache
+from cached_path.schemes import get_cacher, hf_get_from_cache
 from cached_path.util import (
     resource_to_filename,
     find_latest_cached,
@@ -34,12 +34,12 @@ def cached_path(
     then return the path to the cached file. If it's already a local path,
     make sure the file exists and return the path.
 
-    For URLs, the following protocols are all supported:
+    For URLs, the following schemes are all supported:
 
-    * ``http://`` and ``https://``,
-    * ``s3://`` for objects on `AWS S3`_,
-    * ``gs://`` for objects on `Google Cloud Storage (GCS)`_, and
-    * ``hf://`` for objects or repositories on `HuggingFace Hub`_.
+    * ``http`` and ``https``,
+    * ``s3`` for objects on `AWS S3`_,
+    * ``gs`` for objects on `Google Cloud Storage (GCS)`_, and
+    * ``hf`` for objects or repositories on `HuggingFace Hub`_.
 
     .. _AWS S3: https://aws.amazon.com/s3/
     .. _Google Cloud Storage (GCS): https://cloud.google.com/storage
@@ -89,7 +89,7 @@ def cached_path(
         If ``True`` and the file is an archive file, it will be extracted regardless
         of whether or not the extracted directory already exists.
 
-        .. important::
+        .. caution::
             Use this flag with caution! This can lead to race conditions if used
             from multiple processes on the same file.
 
@@ -97,6 +97,9 @@ def cached_path(
     -------
     ``str``
         The local path to the (potentially cached) resource.
+
+        .. important::
+            The return type is always a ``str`` even if the original argument was a ``Path``.
 
     """
     cache_dir = cache_dir if cache_dir else get_cache_dir()
