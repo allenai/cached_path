@@ -4,6 +4,8 @@ import pathlib
 import shutil
 import tempfile
 
+from cached_path.common import set_cache_dir, get_cache_dir
+
 TEST_DIR = tempfile.mkdtemp(prefix="cached_path_tests")
 
 
@@ -31,5 +33,9 @@ class BaseTestClass:
 
         os.makedirs(self.TEST_DIR, exist_ok=True)
 
+        self._initial_cache_dir = get_cache_dir()
+        set_cache_dir(self.TEST_DIR)
+
     def teardown_method(self):
+        set_cache_dir(self._initial_cache_dir)
         shutil.rmtree(self.TEST_DIR)

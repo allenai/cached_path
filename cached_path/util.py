@@ -5,15 +5,17 @@ import tarfile
 from typing import Optional, Tuple, List
 from urllib.parse import urlparse
 
-from cached_path.common import PathOrStr, CACHE_DIRECTORY
+from cached_path.common import PathOrStr, get_cache_dir
 from cached_path.meta import Meta
 
 
 def resource_to_filename(resource: str, etag: Optional[str] = None) -> str:
     """
-    Convert a `resource` into a hashed filename in a repeatable way.
-    If `etag` is specified, append its hash to the resources's, delimited
+    Convert a ``resource`` into a hashed filename in a repeatable way.
+    If ``etag`` is specified, append its hash to the resources', delimited
     by a period.
+
+    THis is essentially the inverse of :func:`filename_to_url()`.
     """
     resource_bytes = resource.encode("utf-8")
     resource_hash = sha256(resource_bytes)
@@ -28,14 +30,15 @@ def resource_to_filename(resource: str, etag: Optional[str] = None) -> str:
 
 
 def filename_to_url(
-    filename: str, cache_dir: PathOrStr = CACHE_DIRECTORY
+    filename: str, cache_dir: Optional[PathOrStr] = None
 ) -> Tuple[str, Optional[str]]:
     """
-    Return the url and etag (which may be `None`) stored for `filename`.
-    Raise `FileNotFoundError` if `filename` or its stored metadata do not exist.
+    Return the URL and etag (which may be ``None``) stored for ``filename``.
+    Raises :exc:`FileNotFoundError` if ``filename`` or its stored metadata do not exist.
 
-    This is essentially the inverse of `resource_to_filename()`.
+    This is essentially the inverse of :func:`resource_to_filename()`.
     """
+    cache_dir = cache_dir if cache_dir else get_cache_dir()
     cache_path = os.path.join(cache_dir, filename)
     if not os.path.exists(cache_path):
         raise FileNotFoundError("file {} not found".format(cache_path))
@@ -48,10 +51,11 @@ def filename_to_url(
     return metadata.resource, metadata.etag
 
 
-def find_latest_cached(url: str, cache_dir: PathOrStr = CACHE_DIRECTORY) -> Optional[str]:
+def find_latest_cached(url: str, cache_dir: Optional[PathOrStr] = None) -> Optional[str]:
     """
     Get the path to the latest cached version of a given resource.
     """
+    cache_dir = cache_dir if cache_dir else get_cache_dir()
     filename = resource_to_filename(url)
     cache_path = os.path.join(cache_dir, filename)
     candidates: List[Tuple[str, float]] = []
@@ -118,4 +122,4 @@ def is_url_or_existing_file(url_or_filename: PathOrStr) -> bool:
         return False
     url_or_filename = os.path.expanduser(str(url_or_filename))
     parsed = urlparse(url_or_filename)
-    return parsed.scheme in ("http", "https", "s3", "gs") or os.path.exists(url_or_filename)
+    return parsed.scheme in ("http", "https", "s3", "gs", "hf") or os.path.exists(url_or_filename)

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added function `set_cache_dir` for overriding the global default cache directory.
+- Added function `get_cache_dir` for getting the global default cache directory.
+- Added function `file_friendly_logging` to turn file friendly logging on globally.
+
 ### Changed
 
 - `_Meta` dataclass renamed to `Meta`.
