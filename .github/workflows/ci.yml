@@ -70,6 +70,10 @@ jobs:
               python setup.py check
               python setup.py bdist_wheel sdist
 
+          - name: Docs
+            run: |
+              cd docs && make html
+
     steps:
       - uses: actions/checkout@v2
 
