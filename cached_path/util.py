@@ -5,6 +5,7 @@ import tarfile
 from typing import Optional, Tuple, List
 from urllib.parse import urlparse
 
+from cached_path.schemes import get_supported_schemes
 from cached_path.common import PathOrStr, get_cache_dir
 from cached_path.meta import Meta
 
@@ -122,4 +123,4 @@ def is_url_or_existing_file(url_or_filename: PathOrStr) -> bool:
         return False
     url_or_filename = os.path.expanduser(str(url_or_filename))
     parsed = urlparse(url_or_filename)
-    return parsed.scheme in ("http", "https", "s3", "gs", "hf") or os.path.exists(url_or_filename)
+    return parsed.scheme in get_supported_schemes() or os.path.exists(url_or_filename)

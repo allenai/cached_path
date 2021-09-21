@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added function `set_cache_dir` for overriding the global default cache directory.
 - Added function `get_cache_dir` for getting the global default cache directory.
+- Added function `add_scheme_client` for extending `cached_path` to handle more URL schemes.
 - Added function `file_friendly_logging` to turn file friendly logging on globally.
 
 ### Changed

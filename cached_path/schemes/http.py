@@ -26,6 +26,8 @@ def session_with_backoff() -> requests.Session:
 
 
 class HttpClient(SchemeClient):
+    scheme = ("http", "https")
+
     @overrides
     def get_etag(self) -> Optional[str]:
         with session_with_backoff() as session:

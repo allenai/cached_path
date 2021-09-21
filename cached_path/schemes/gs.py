@@ -14,6 +14,8 @@ from cached_path.schemes.scheme_client import SchemeClient
 
 
 class GsClient(SchemeClient):
+    scheme = "gs"
+
     @overrides
     def get_etag(self) -> Optional[str]:
         return gcs_md5(self.resource)

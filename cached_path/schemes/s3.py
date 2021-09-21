@@ -14,9 +14,10 @@ from cached_path.schemes.scheme_client import SchemeClient
 
 
 class S3Client(SchemeClient):
-    ConnectionErrorTypes = SchemeClient.ConnectionErrorTypes + (
+    connection_error_types = SchemeClient.connection_error_types + (
         botocore.exceptions.EndpointConnectionError,
     )
+    scheme = "s3"
 
     @overrides
     def get_etag(self) -> Optional[str]:

@@ -11,7 +11,7 @@ from cached_path.cache_file import CacheFile
 from cached_path.common import PathOrStr, get_cache_dir
 from cached_path.file_lock import FileLock
 from cached_path.meta import Meta
-from cached_path.schemes import get_scheme_client, hf_get_from_cache
+from cached_path.schemes import get_scheme_client, get_supported_schemes, hf_get_from_cache
 from cached_path.util import (
     resource_to_filename,
     find_latest_cached,
@@ -34,12 +34,14 @@ def cached_path(
     then return the path to the cached file. If it's already a local path,
     make sure the file exists and return the path.
 
-    For URLs, the following schemes are all supported:
+    For URLs, the following schemes are all supported out-of-the-box:
 
     * ``http`` and ``https``,
     * ``s3`` for objects on `AWS S3`_,
     * ``gs`` for objects on `Google Cloud Storage (GCS)`_, and
     * ``hf`` for objects or repositories on `HuggingFace Hub`_.
+
+    You can also extend ``cached_path()`` to handle more schemes with :func:`add_scheme_client()`.
 
     .. _AWS S3: https://aws.amazon.com/s3/
     .. _Google Cloud Storage (GCS): https://cloud.google.com/storage
@@ -135,7 +137,7 @@ def cached_path(
 
     parsed = urlparse(url_or_filename)
 
-    if parsed.scheme in ("http", "https", "s3", "hf", "gs"):
+    if parsed.scheme in get_supported_schemes():
         # URL, so get it from the cache (downloading if necessary)
         file_path = get_from_cache(url_or_filename, cache_dir)
 
@@ -243,7 +245,7 @@ def get_from_cache(url: str, cache_dir: Optional[PathOrStr] = None) -> str:
     # Get eTag to add to filename, if it exists.
     try:
         etag = client.get_etag()
-    except client.ConnectionErrorTypes:  # type: ignore
+    except client.connection_error_types:  # type: ignore
         # We might be offline, in which case we don't want to throw an error
         # just yet. Instead, we'll try to use the latest cached version of the
         # target resource, if it exists. We'll only throw an exception if we

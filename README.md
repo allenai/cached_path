@@ -35,7 +35,7 @@ If it's a remote resource, it downloads the file and caches it to the [cache dir
 then returns the path to the cached file. If it's already a local path,
 it makes sure the file exists and returns the path.
 
-For URLs, `http://`, `https://`, `s3://` (AWS S3), `gs://` (Google Cloud Storage), and `hf://` (HuggingFace Hub) are all supported.
+For URLs, `http://`, `https://`, `s3://` (AWS S3), `gs://` (Google Cloud Storage), and `hf://` (HuggingFace Hub) are all supported out-of-the-box.
 
 For example, to download the PyTorch weights for the model `epwalsh/bert-xsmall-dummy`
 on HuggingFace, you could do:

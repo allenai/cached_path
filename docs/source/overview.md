@@ -22,6 +22,10 @@ assert os.path.exists(path)
 assert os.path.split(path)[0] == os.path.expanduser("~/.cache/cached_path")
 ```
 
+```{tip}
+There are multiple ways to [change the cache directory](#overriding-the-default-cache-directory).
+```
+
 If you were to call this again after the ETag of the resource has changed, a new version will be cached:
 
 ```python
@@ -29,11 +33,13 @@ path2 = cached_path("https://github.com/allenai/cached_path/blob/main/README.md"
 assert path2 != path
 ```
 
-```{tip}
+## Supported URL schemes
+
 In addition to `http` and `https`, `cached_path()` supports several other schemes such as `s3` (AWS S3), `gs` (Google Cloud Storage),
 and `hf` (HuggingFace Hub).
 For a full list of supported schemes and examples, check the [API documentation](api/cached_path).
-```
+
+You can also overwrite how any of these schemes are handled or add clients for new schemes with the [`add_scheme_client`](api/util.html#cached_path.add_scheme_client) method.
 
 ## Working with archives
 
