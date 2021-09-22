@@ -18,4 +18,5 @@ from cached_path.util import (
     filename_to_url,
     find_latest_cached,
     check_tarfile,
+    is_url_or_existing_file,
 )
