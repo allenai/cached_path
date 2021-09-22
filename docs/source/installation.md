@@ -13,7 +13,7 @@ pip install cached-path
 
 ## Installing from source
 
-To install **cached-path** from source, first clone [the respository](https://github.com/allenai/cached_path):
+To install **cached-path** from source, first clone [the repository](https://github.com/allenai/cached_path):
 
 ```bash
 git clone https://github.com/allenai/cached_path.git
