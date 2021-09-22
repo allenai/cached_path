@@ -65,6 +65,7 @@ class Meta:
             creation_time=time.time(),
             size=cls.get_resource_size(cached_path),
             etag=etag,
+            extraction_dir=extraction_dir,
         )
 
     def to_file(self) -> None:

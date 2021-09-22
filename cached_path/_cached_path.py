@@ -2,7 +2,7 @@ import os
 import logging
 import tempfile
 from urllib.parse import urlparse
-from typing import Optional
+from typing import Optional, Tuple
 from zipfile import ZipFile, is_zipfile
 import tarfile
 import shutil
@@ -126,6 +126,7 @@ def cached_path(
 
     file_path: str
     extraction_path: Optional[str] = None
+    etag: Optional[str] = None
 
     # If we're using the /a/b/foo.zip!c/d/file.txt syntax, handle it here.
     exclamation_index = url_or_filename.find("!")
@@ -152,7 +153,7 @@ def cached_path(
 
     if parsed.scheme in get_supported_schemes():
         # URL, so get it from the cache (downloading if necessary)
-        file_path = get_from_cache(url_or_filename, cache_dir)
+        file_path, etag = get_from_cache(url_or_filename, cache_dir)
 
         if extract_archive and (is_zipfile(file_path) or tarfile.is_tarfile(file_path)):
             # This is the path the file should be extracted to.
@@ -232,6 +233,7 @@ def cached_path(
                 meta = Meta.new(
                     url_or_filename,
                     extraction_path,
+                    etag=etag,
                     extraction_dir=True,
                 )
                 meta.to_file()
@@ -243,15 +245,15 @@ def cached_path(
     return file_path
 
 
-def get_from_cache(url: str, cache_dir: Optional[PathOrStr] = None) -> str:
+def get_from_cache(url: str, cache_dir: Optional[PathOrStr] = None) -> Tuple[str, Optional[str]]:
     """
     Given a URL, look for the corresponding dataset in the local cache.
-    If it's not there, download it. Then return the path to the cached file.
+    If it's not there, download it. Then return the path to the cached file and the ETag.
     """
     cache_dir = cache_dir if cache_dir else get_cache_dir()
 
     if url.startswith("hf://"):
-        return hf_get_from_cache(url, cache_dir)
+        return hf_get_from_cache(url, cache_dir), None
 
     client = get_scheme_client(url)
 
@@ -278,7 +280,8 @@ def get_from_cache(url: str, cache_dir: Optional[PathOrStr] = None) -> str:
                 url,
                 latest_cached,
             )
-            return latest_cached
+            meta = Meta.from_path(latest_cached + ".json")
+            return latest_cached, meta.etag
         else:
             logger.error(
                 "Connection failed while trying to fetch ETag, "
@@ -319,4 +322,4 @@ def get_from_cache(url: str, cache_dir: Optional[PathOrStr] = None) -> str:
             )
             meta.to_file()
 
-    return cache_path
+    return cache_path, etag

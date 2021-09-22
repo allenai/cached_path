@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - For HTTP resources, when the server returns a 404 `cached_path()` now raises `FileNotFoundError`
   for consistency.
+- Fixed fetching ETag / MD5 hash for Google Cloud Storage resources.
+- Made Google Cloud Storage requests more robust by adding a retry policy and checking MD5 sums.
 
 ## [v0.1.0](https://github.com/allenai/cached_path/releases/tag/v0.1.0) - 2021-09-09
 

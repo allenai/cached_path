@@ -18,47 +18,47 @@ from cached_path.schemes import HttpClient
 from cached_path.testing import BaseTestClass
 
 
-def set_up_glove(url: str, byt: bytes, change_etag_every: int = 1000):
-    # Mock response for the datastore url that returns glove vectors
-    responses.add(
-        responses.GET,
-        url,
-        body=byt,
-        status=200,
-        content_type="application/gzip",
-        stream=True,
-        headers={"Content-Length": str(len(byt))},
-    )
+class TestCachedPathHttp(BaseTestClass):
+    @staticmethod
+    def set_up_glove(url: str, byt: bytes, change_etag_every: int = 1000):
+        # Mock response for the datastore url that returns glove vectors
+        responses.add(
+            responses.GET,
+            url,
+            body=byt,
+            status=200,
+            content_type="application/gzip",
+            stream=True,
+            headers={"Content-Length": str(len(byt))},
+        )
 
-    etags_left = change_etag_every
-    etag = "0"
+        etags_left = change_etag_every
+        etag = "0"
 
-    def head_callback(_):
-        """
-        Writing this as a callback allows different responses to different HEAD requests.
-        In our case, we're going to change the ETag header every `change_etag_every`
-        requests, which will allow us to simulate having a new version of the file.
-        """
-        nonlocal etags_left, etag
-        headers = {"ETag": etag}
-        # countdown and change ETag
-        etags_left -= 1
-        if etags_left <= 0:
-            etags_left = change_etag_every
-            etag = str(int(etag) + 1)
-        return (200, headers, "")
+        def head_callback(_):
+            """
+            Writing this as a callback allows different responses to different HEAD requests.
+            In our case, we're going to change the ETag header every `change_etag_every`
+            requests, which will allow us to simulate having a new version of the file.
+            """
+            nonlocal etags_left, etag
+            headers = {"ETag": etag}
+            # countdown and change ETag
+            etags_left -= 1
+            if etags_left <= 0:
+                etags_left = change_etag_every
+                etag = str(int(etag) + 1)
+            return (200, headers, "")
 
-    responses.add_callback(responses.HEAD, url, callback=head_callback)
+        responses.add_callback(responses.HEAD, url, callback=head_callback)
 
-
-class TestCachedPath(BaseTestClass):
     def setup_method(self):
         super().setup_method()
         self.glove_file = self.FIXTURES_ROOT / "embeddings/glove.6B.100d.sample.txt.gz"
         with open(self.glove_file, "rb") as glove:
             self.glove_bytes = glove.read()
 
-    def test_cached_path_offline(self, monkeypatch):
+    def test_offline_mode(self, monkeypatch):
         # Ensures `cached_path` just returns the path to the latest cached version
         # of the resource when there's no internet connection.
 
@@ -91,23 +91,24 @@ class TestCachedPath(BaseTestClass):
 
         # The version corresponding to the last etag should be returned, since
         # that one has the latest "last modified" time.
-        assert get_from_cache(url) == filenames[-1]
+        assert get_from_cache(url)[0] == filenames[-1]
 
         # We also want to make sure this works when the latest cached version doesn't
         # have a corresponding etag.
         filename = os.path.join(self.TEST_DIR, resource_to_filename(url))
         meta = Meta(resource=url, cached_path=filename, creation_time=time.time(), size=2341)
+        meta.to_file()
         with open(filename, "w") as f:
             f.write("some random data")
 
-        assert get_from_cache(url) == filename
+        assert get_from_cache(url)[0] == filename
 
     @responses.activate
     def test_get_from_cache(self):
         url = "http://fake.datastore.com/glove.txt.gz"
-        set_up_glove(url, self.glove_bytes, change_etag_every=2)
+        self.set_up_glove(url, self.glove_bytes, change_etag_every=2)
 
-        filename = get_from_cache(url)
+        filename, _ = get_from_cache(url)
         assert filename == os.path.join(self.TEST_DIR, resource_to_filename(url, etag="0"))
         assert os.path.exists(filename + ".json")
         meta = Meta.from_path(filename + ".json")
@@ -125,7 +126,7 @@ class TestCachedPath(BaseTestClass):
 
         # A second call to `get_from_cache` should make another HEAD call
         # but not another GET call.
-        filename2 = get_from_cache(url)
+        filename2, _ = get_from_cache(url)
         assert filename2 == filename
 
         method_counts = Counter(call.request.method for call in responses.calls)
@@ -138,7 +139,7 @@ class TestCachedPath(BaseTestClass):
 
         # A third call should have a different ETag and should force a new download,
         # which means another HEAD call and another GET call.
-        filename3 = get_from_cache(url)
+        filename3, _ = get_from_cache(url)
         assert filename3 == os.path.join(self.TEST_DIR, resource_to_filename(url, etag="1"))
 
         method_counts = Counter(call.request.method for call in responses.calls)
@@ -150,9 +151,9 @@ class TestCachedPath(BaseTestClass):
             assert cached_file.read() == self.glove_bytes
 
     @responses.activate
-    def test_cached_path(self):
+    def test_http_200(self):
         url = "http://fake.datastore.com/glove.txt.gz"
-        set_up_glove(url, self.glove_bytes)
+        self.set_up_glove(url, self.glove_bytes)
 
         # non-existent file
         with pytest.raises(FileNotFoundError):
@@ -183,7 +184,7 @@ class TestCachedPath(BaseTestClass):
             assert f.read().startswith("I mean, ")
 
     @responses.activate
-    def test_cached_path_http_404(self):
+    def test_http_404(self):
         url_404 = "http://fake.datastore.com/does-not-exist"
         byt = b"Does not exist"
         for method in (responses.GET, responses.HEAD):
@@ -199,7 +200,7 @@ class TestCachedPath(BaseTestClass):
             cached_path(url_404)
 
     @responses.activate
-    def test_cached_path_http_500(self):
+    def test_http_500(self):
         url_500 = "http://fake.datastore.com/server-error"
         byt = b"Server error"
         for method in (responses.GET, responses.HEAD):
@@ -214,11 +215,6 @@ class TestCachedPath(BaseTestClass):
         with pytest.raises(HTTPError):
             cached_path(url_500)
 
-    def test_extract_with_external_symlink(self):
-        dangerous_file = self.FIXTURES_ROOT / "common" / "external_symlink.tar.gz"
-        with pytest.raises(ValueError):
-            cached_path(dangerous_file, extract_archive=True)
-
 
 class TestCachedPathWithArchive(BaseTestClass):
     def setup_method(self):
@@ -231,6 +227,11 @@ class TestCachedPathWithArchive(BaseTestClass):
         shutil.copyfile(
             self.FIXTURES_ROOT / "utf-8_sample" / "archives" / "utf-8.zip", self.zip_file
         )
+
+    def test_extract_with_external_symlink(self):
+        dangerous_file = self.FIXTURES_ROOT / "common" / "external_symlink.tar.gz"
+        with pytest.raises(ValueError):
+            cached_path(dangerous_file, extract_archive=True)
 
     def check_extracted(self, extracted: str):
         assert os.path.isdir(extracted)
@@ -298,7 +299,28 @@ class TestCachedPathWithArchive(BaseTestClass):
         self.check_extracted(extracted)
 
 
-class TestHFHubDownload(BaseTestClass):
+class TestCachedPathGs(BaseTestClass):
+    def test_cache_blob(self):
+        path = cached_path("gs://allennlp-public-models/bert-xsmall-dummy.tar.gz")
+        assert os.path.isfile(path)
+        meta = Meta.from_path(path + ".json")
+        assert meta.etag is not None
+
+    def test_cache_and_extract_blob(self):
+        path = cached_path(
+            "gs://allennlp-public-models/bert-xsmall-dummy.tar.gz", extract_archive=True
+        )
+        assert os.path.isdir(path)
+        meta = Meta.from_path(path + ".json")
+        assert meta.extraction_dir
+        assert meta.etag is not None
+
+    def test_file_not_found(self):
+        with pytest.raises(FileNotFoundError):
+            cached_path("gs://allennlp-public-models/does-not-exist")
+
+
+class TestCachedPathHf(BaseTestClass):
     def test_cached_download_no_user_or_org(self):
         path = cached_path("hf://t5-small/config.json")
         assert os.path.isfile(path)
