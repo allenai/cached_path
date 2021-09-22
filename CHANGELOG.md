@@ -21,6 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CacheFile` moved to `cached_path.cache_file`.
 - The download progress bar uses 1024 instead of 1000 as the unit scale.
 
+### Fixed
+
+- For HTTP resources, when the server returns a 404 `cached_path()` now raises `FileNotFoundError`
+  for consistency.
+
 ## [v0.1.0](https://github.com/allenai/cached_path/releases/tag/v0.1.0) - 2021-09-09
 
 ### Added

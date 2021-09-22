@@ -183,7 +183,7 @@ class TestCachedPath(BaseTestClass):
             assert f.read().startswith("I mean, ")
 
     @responses.activate
-    def test_cached_path_http_err_handling(self):
+    def test_cached_path_http_404(self):
         url_404 = "http://fake.datastore.com/does-not-exist"
         byt = b"Does not exist"
         for method in (responses.GET, responses.HEAD):
@@ -195,8 +195,24 @@ class TestCachedPath(BaseTestClass):
                 headers={"Content-Length": str(len(byt))},
             )
 
-        with pytest.raises(HTTPError):
+        with pytest.raises(FileNotFoundError):
             cached_path(url_404)
+
+    @responses.activate
+    def test_cached_path_http_500(self):
+        url_500 = "http://fake.datastore.com/server-error"
+        byt = b"Server error"
+        for method in (responses.GET, responses.HEAD):
+            responses.add(
+                method,
+                url_500,
+                body=byt,
+                status=500,
+                headers={"Content-Length": str(len(byt))},
+            )
+
+        with pytest.raises(HTTPError):
+            cached_path(url_500)
 
     def test_extract_with_external_symlink(self):
         dangerous_file = self.FIXTURES_ROOT / "common" / "external_symlink.tar.gz"

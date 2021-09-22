@@ -103,6 +103,19 @@ def cached_path(
         .. important::
             The return type is always a ``str`` even if the original argument was a ``Path``.
 
+    Raises
+    ------
+    ``FileNotFoundError``
+
+        If the resource cannot be found locally or remotely.
+
+    ``ValueError``
+        When the URL is invalid.
+
+    ``Other errors``
+        Other error types are possible as well depending on the client used to fetch
+        the resource.
+
     """
     cache_dir = cache_dir if cache_dir else get_cache_dir()
     cache_dir = os.path.expanduser(cache_dir)
@@ -245,6 +258,8 @@ def get_from_cache(url: str, cache_dir: Optional[PathOrStr] = None) -> str:
     # Get eTag to add to filename, if it exists.
     try:
         etag = client.get_etag()
+    except FileNotFoundError:
+        raise
     except client.connection_error_types:  # type: ignore
         # We might be offline, in which case we don't want to throw an error
         # just yet. Instead, we'll try to use the latest cached version of the
@@ -271,9 +286,10 @@ def get_from_cache(url: str, cache_dir: Optional[PathOrStr] = None) -> str:
                 url,
             )
             raise
-    except OSError:
-        # OSError may be triggered if we were unable to fetch the eTag.
+    except Exception as exc:
+        # Other exceptions may be triggered if we were unable to fetch the eTag.
         # If this is the case, try to proceed without eTag check.
+        logger.error("Encountered error while trying to fetch ETag for %s: %s", url, exc)
         etag = None
 
     filename = resource_to_filename(url, etag)
