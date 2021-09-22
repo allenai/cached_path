@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `FileLock` moved to `cached_path.file_lock`.
 - `CacheFile` moved to `cached_path.cache_file`.
 - The download progress bar uses 1024 instead of 1000 as the unit scale.
+- S3 downloads now have a progress bar.
 
 ### Fixed
 

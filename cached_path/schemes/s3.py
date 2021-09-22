@@ -10,6 +10,7 @@ from overrides import overrides
 
 from cached_path.common import _split_cloud_path
 from cached_path.schemes.scheme_client import SchemeClient
+from cached_path.tqdm import Tqdm
 
 
 class S3Client(SchemeClient):
@@ -44,7 +45,15 @@ class S3Client(SchemeClient):
 
     @overrides
     def get_resource(self, temp_file: IO) -> None:
-        self.s3_object.download_fileobj(temp_file)
+        progress = Tqdm.tqdm(
+            unit="iB",
+            unit_scale=True,
+            unit_divisor=1024,
+            total=self.s3_object.content_length,
+            desc="downloading",
+        )
+        self.s3_object.download_fileobj(temp_file, Callback=progress.update)
+        progress.close()
 
     @staticmethod
     def split_s3_path(url: str) -> Tuple[str, str]:
