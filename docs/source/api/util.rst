@@ -1,6 +1,10 @@
 Utilities
 =========
 
+.. code-block::
+
+    from cached_path import *
+
 Functions
 ---------
 

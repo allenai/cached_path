@@ -3,6 +3,10 @@ Overview
 
 The main functionality of **cached-path** is provided by the function [`cached_path()`](api/cached_path).
 
+```python
+from cached_path import cached_path
+```
+
 ## Basic usage
 
 `cached_path()` has a single positional argument that is either the path to a local file or the URL of a remote resource.
