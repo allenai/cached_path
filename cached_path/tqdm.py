@@ -4,7 +4,6 @@ Wraps tqdm so we can add configurable
 global defaults for certain tqdm parameters.
 """
 import logging
-import os
 import sys
 from time import time
 from typing import Optional
