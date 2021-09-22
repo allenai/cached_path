@@ -59,12 +59,13 @@ class Meta:
         etag: Optional[str] = None,
         extraction_dir: bool = False
     ) -> "Meta":
-        return cls(
+        return cls(  # type: ignore
             resource=str(resource),
             cached_path=str(cached_path),
             creation_time=time.time(),
             size=cls.get_resource_size(cached_path),
             etag=etag,
+            extraction_dir=extraction_dir,
         )
 
     def to_file(self) -> None:
@@ -87,7 +88,7 @@ class Meta:
                 data["cached_path"] = path[:-5]
             if "size" not in data:
                 data["size"] = cls.get_resource_size(data["cached_path"])
-        return cls(**data)
+        return cls(**data)  # type: ignore
 
     @staticmethod
     def get_resource_size(path: PathOrStr) -> int:
