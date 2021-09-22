@@ -18,13 +18,14 @@ class GsClient(SchemeClient):
 
     def __init__(self, resource: str) -> None:
         super().__init__(resource)
-        try:
-            self.blob = GsClient.get_gcs_blob(resource)
-        except NotFound:
-            raise FileNotFoundError(resource)
+        self.blob = GsClient.get_gcs_blob(resource)
 
     @overrides
     def get_etag(self) -> Optional[str]:
+        try:
+            self.blob.reload()
+        except NotFound:
+            raise FileNotFoundError(self.resource)
         return self.blob.etag or self.blob.md5_hash
 
     @overrides
@@ -41,5 +42,4 @@ class GsClient(SchemeClient):
         bucket_name, gcs_path = GsClient.split_gcs_path(resource)
         bucket = gcs_resource.bucket(bucket_name)
         blob = bucket.blob(gcs_path)
-        blob.reload()
         return blob

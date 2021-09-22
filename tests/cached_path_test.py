@@ -320,6 +320,14 @@ class TestCachedPathGs(BaseTestClass):
             cached_path("gs://allennlp-public-models/does-not-exist")
 
 
+class TestCachedPathS3(BaseTestClass):
+    def test_cache_object(self):
+        path = cached_path("s3://allennlp/datasets/squad/squad-dev-v1.1.json")
+        assert os.path.isfile(path)
+        meta = Meta.from_path(path + ".json")
+        assert meta.etag is not None
+
+
 class TestCachedPathHf(BaseTestClass):
     def test_cached_download_no_user_or_org(self):
         path = cached_path("hf://t5-small/config.json")
