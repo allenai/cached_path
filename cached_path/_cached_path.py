@@ -2,16 +2,16 @@ import os
 import logging
 import tempfile
 from urllib.parse import urlparse
-from typing import Optional
+from typing import Optional, Tuple
 from zipfile import ZipFile, is_zipfile
 import tarfile
 import shutil
 
 from cached_path.cache_file import CacheFile
-from cached_path.common import PathOrStr, CACHE_DIRECTORY
+from cached_path.common import PathOrStr, get_cache_dir
 from cached_path.file_lock import FileLock
 from cached_path.meta import Meta
-from cached_path.protocols import get_cacher, hf_get_from_cache
+from cached_path.schemes import get_scheme_client, get_supported_schemes, hf_get_from_cache
 from cached_path.util import (
     resource_to_filename,
     find_latest_cached,
@@ -24,7 +24,7 @@ logger = logging.getLogger("cached_path")
 
 def cached_path(
     url_or_filename: PathOrStr,
-    cache_dir: PathOrStr = CACHE_DIRECTORY,
+    cache_dir: Optional[PathOrStr] = None,
     extract_archive: bool = False,
     force_extract: bool = False,
 ) -> str:
@@ -34,45 +34,90 @@ def cached_path(
     then return the path to the cached file. If it's already a local path,
     make sure the file exists and return the path.
 
-    For URLs, "http://", "https://", "s3://", "gs://", and "hf://" are all supported.
-    The latter corresponds to the HuggingFace Hub.
+    For URLs, the following schemes are all supported out-of-the-box:
 
-    For example, to download the PyTorch weights for the model `epwalsh/bert-xsmall-dummy`
-    on HuggingFace, you could do:
+    * ``http`` and ``https``,
+    * ``s3`` for objects on `AWS S3`_,
+    * ``gs`` for objects on `Google Cloud Storage (GCS)`_, and
+    * ``hf`` for objects or repositories on `HuggingFace Hub`_.
 
-    ```python
-    cached_path("hf://epwalsh/bert-xsmall-dummy/pytorch_model.bin")
-    ```
+    You can also extend ``cached_path()`` to handle more schemes with :func:`add_scheme_client()`.
 
-    For paths or URLs that point to a tarfile or zipfile, you can also add a path
-    to a specific file to the `url_or_filename` preceeded by a "!", and the archive will
-    be automatically extracted (provided you set `extract_archive` to `True`),
-    returning the local path to the specific file. For example:
+    .. _AWS S3: https://aws.amazon.com/s3/
+    .. _Google Cloud Storage (GCS): https://cloud.google.com/storage
+    .. _HuggingFace Hub: https://huggingface.co/
 
-    ```python
-    cached_path("model.tar.gz!weights.th", extract_archive=True)
-    ```
+    Examples
+    --------
 
-    # Parameters
+    To download a file over ``https``::
 
-    url_or_filename : `PathOrStr`
+        cached_path("https://github.com/allenai/cached_path/blob/main/README.md")
+
+    To download an object on GCS::
+
+        cached_path("gs://allennlp-public-models/lerc-2020-11-18.tar.gz")
+
+    To download the PyTorch weights for the model `epwalsh/bert-xsmall-dummy`_
+    on HuggingFace, you could do::
+
+        cached_path("hf://epwalsh/bert-xsmall-dummy/pytorch_model.bin")
+
+    For paths or URLs that point to a tarfile or zipfile, you can append the path
+    to a specific file within the archive to the ``url_or_filename``, preceeded by a "!".
+    The archive will be automatically extracted (provided you set ``extract_archive`` to ``True``),
+    returning the local path to the specific file. For example::
+
+        cached_path("model.tar.gz!weights.th", extract_archive=True)
+
+    .. _epwalsh/bert-xsmall-dummy: https://huggingface.co/epwalsh/bert-xsmall-dummy
+
+    Parameters
+    ----------
+
+    url_or_filename :
         A URL or path to parse and possibly download.
 
-    cache_dir : `PathOrStr`, optional (default = `CACHE_DIRECTORY`)
-        The directory to cache downloads.
+    cache_dir :
+        The directory to cache downloads. If not specified, the global default cache directory
+        will be used (``~/.cache/cached_path``). This can be set to something else with
+        :func:`set_cache_dir()`.
 
-    extract_archive : `bool`, optional (default = `False`)
-        If `True`, then zip or tar.gz archives will be automatically extracted.
+    extract_archive :
+        If ``True``, then zip or tar.gz archives will be automatically extracted.
         In which case the directory is returned.
 
-    force_extract : `bool`, optional (default = `False`)
-        If `True` and the file is an archive file, it will be extracted regardless
+    force_extract :
+        If ``True`` and the file is an archive file, it will be extracted regardless
         of whether or not the extracted directory already exists.
 
-        !!! Warning
+        .. caution::
             Use this flag with caution! This can lead to race conditions if used
             from multiple processes on the same file.
+
+    Returns
+    -------
+    ``str``
+        The local path to the (potentially cached) resource.
+
+        .. important::
+            The return type is always a ``str`` even if the original argument was a ``Path``.
+
+    Raises
+    ------
+    ``FileNotFoundError``
+
+        If the resource cannot be found locally or remotely.
+
+    ``ValueError``
+        When the URL is invalid.
+
+    ``Other errors``
+        Other error types are possible as well depending on the client used to fetch
+        the resource.
+
     """
+    cache_dir = cache_dir if cache_dir else get_cache_dir()
     cache_dir = os.path.expanduser(cache_dir)
     os.makedirs(cache_dir, exist_ok=True)
 
@@ -81,6 +126,7 @@ def cached_path(
 
     file_path: str
     extraction_path: Optional[str] = None
+    etag: Optional[str] = None
 
     # If we're using the /a/b/foo.zip!c/d/file.txt syntax, handle it here.
     exclamation_index = url_or_filename.find("!")
@@ -105,9 +151,9 @@ def cached_path(
 
     parsed = urlparse(url_or_filename)
 
-    if parsed.scheme in ("http", "https", "s3", "hf", "gs"):
+    if parsed.scheme in get_supported_schemes():
         # URL, so get it from the cache (downloading if necessary)
-        file_path = get_from_cache(url_or_filename, cache_dir)
+        file_path, etag = get_from_cache(url_or_filename, cache_dir)
 
         if extract_archive and (is_zipfile(file_path) or tarfile.is_tarfile(file_path)):
             # This is the path the file should be extracted to.
@@ -187,6 +233,7 @@ def cached_path(
                 meta = Meta.new(
                     url_or_filename,
                     extraction_path,
+                    etag=etag,
                     extraction_dir=True,
                 )
                 meta.to_file()
@@ -198,20 +245,24 @@ def cached_path(
     return file_path
 
 
-def get_from_cache(url: str, cache_dir: PathOrStr = CACHE_DIRECTORY) -> str:
+def get_from_cache(url: str, cache_dir: Optional[PathOrStr] = None) -> Tuple[str, Optional[str]]:
     """
     Given a URL, look for the corresponding dataset in the local cache.
-    If it's not there, download it. Then return the path to the cached file.
+    If it's not there, download it. Then return the path to the cached file and the ETag.
     """
-    if url.startswith("hf://"):
-        return hf_get_from_cache(url, cache_dir)
+    cache_dir = cache_dir if cache_dir else get_cache_dir()
 
-    cacher = get_cacher(url)
+    if url.startswith("hf://"):
+        return hf_get_from_cache(url, cache_dir), None
+
+    client = get_scheme_client(url)
 
     # Get eTag to add to filename, if it exists.
     try:
-        etag = cacher.get_etag()
-    except cacher.ConnectionErrorTypes:  # type: ignore
+        etag = client.get_etag()
+    except FileNotFoundError:
+        raise
+    except client.connection_error_types:  # type: ignore
         # We might be offline, in which case we don't want to throw an error
         # just yet. Instead, we'll try to use the latest cached version of the
         # target resource, if it exists. We'll only throw an exception if we
@@ -229,7 +280,8 @@ def get_from_cache(url: str, cache_dir: PathOrStr = CACHE_DIRECTORY) -> str:
                 url,
                 latest_cached,
             )
-            return latest_cached
+            meta = Meta.from_path(latest_cached + ".json")
+            return latest_cached, meta.etag
         else:
             logger.error(
                 "Connection failed while trying to fetch ETag, "
@@ -237,9 +289,10 @@ def get_from_cache(url: str, cache_dir: PathOrStr = CACHE_DIRECTORY) -> str:
                 url,
             )
             raise
-    except OSError:
-        # OSError may be triggered if we were unable to fetch the eTag.
+    except Exception as exc:
+        # Other exceptions may be triggered if we were unable to fetch the eTag.
         # If this is the case, try to proceed without eTag check.
+        logger.error("Encountered error while trying to fetch ETag for %s: %s", url, exc)
         etag = None
 
     filename = resource_to_filename(url, etag)
@@ -259,7 +312,7 @@ def get_from_cache(url: str, cache_dir: PathOrStr = CACHE_DIRECTORY) -> str:
         else:
             with CacheFile(cache_path) as cache_file:
                 logger.info("%s not found in cache, downloading to %s", url, cache_path)
-                cacher.get_resource(cache_file)
+                client.get_resource(cache_file)
 
             logger.debug("creating metadata file for %s", cache_path)
             meta = Meta.new(
@@ -269,4 +322,4 @@ def get_from_cache(url: str, cache_dir: PathOrStr = CACHE_DIRECTORY) -> str:
             )
             meta.to_file()
 
-    return cache_path
+    return cache_path, etag

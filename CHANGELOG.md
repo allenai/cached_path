@@ -7,12 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added function `set_cache_dir` for overriding the global default cache directory.
+- Added function `get_cache_dir` for getting the global default cache directory.
+- Added function `add_scheme_client` for extending `cached_path` to handle more URL schemes.
+- Added function `file_friendly_logging` to turn file friendly logging on globally.
+
 ### Changed
 
 - `_Meta` dataclass renamed to `Meta`.
 - `FileLock` moved to `cached_path.file_lock`.
 - `CacheFile` moved to `cached_path.cache_file`.
 - The download progress bar uses 1024 instead of 1000 as the unit scale.
+- AWS S3 and Google Cloud Storage downloads now have a progress bar.
+
+### Fixed
+
+- For HTTP resources, when the server returns a 404 `cached_path()` now raises `FileNotFoundError`
+  for consistency.
+- Fixed fetching ETag / MD5 hash for Google Cloud Storage resources.
+- Made Google Cloud Storage requests more robust by adding a retry policy and checking MD5 sums.
 
 ## [v0.1.0](https://github.com/allenai/cached_path/releases/tag/v0.1.0) - 2021-09-09
 

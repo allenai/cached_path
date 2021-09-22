@@ -1,7 +1,7 @@
 """
 HuggingFace Hub.
 
-Unlike the other protocols, we don't implement a `Cacher` subclass here because
+Unlike the other schemes, we don't implement a `SchemeClient` subclass here because
 `huggingface_hub` handles the caching logic internally in essentially the same way.
 """
 

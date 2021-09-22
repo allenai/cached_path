@@ -3,11 +3,13 @@ Copied over from `allennlp.common.tqdm.Tqdm`.
 Wraps tqdm so we can add configurable
 global defaults for certain tqdm parameters.
 """
+from contextlib import contextmanager
 import logging
-import os
 import sys
 from time import time
 from typing import Optional
+
+from cached_path import common
 
 try:
     SHELL = str(type(get_ipython()))  # type:ignore # noqa: F821
@@ -54,7 +56,7 @@ class TqdmToLogsWriter(object):
 
     def write(self, message):
         file_friendly_message: Optional[str] = None
-        if os.environ.get("FILE_FRIENDLY_LOGGING", False):
+        if common.FILE_FRIENDLY_LOGGING:
             file_friendly_message = replace_cr_with_newline(message)
             if file_friendly_message.strip():
                 sys.stderr.write(file_friendly_message)
@@ -79,16 +81,25 @@ class TqdmToLogsWriter(object):
 class Tqdm:
     @staticmethod
     def tqdm(*args, **kwargs):
-        # Use a slower interval when FILE_FRIENDLY_LOGGING is set.
-        default_mininterval = 2.0 if os.environ.get("FILE_FRIENDLY_LOGGING", False) else 0.1
+        new_kwargs = Tqdm.get_updated_kwargs(**kwargs)
+        return _tqdm(*args, **new_kwargs)
 
-        new_kwargs = {
+    @staticmethod
+    @contextmanager
+    def wrapattr(*args, **kwargs):
+        new_kwargs = Tqdm.get_updated_kwargs(**kwargs)
+        with _tqdm.wrapattr(*args, **new_kwargs) as t:
+            yield t
+
+    @staticmethod
+    def get_updated_kwargs(**kwargs):
+        # Use a slower interval when FILE_FRIENDLY_LOGGING is set.
+        default_mininterval = 2.0 if common.FILE_FRIENDLY_LOGGING else 0.1
+        return {
             "file": TqdmToLogsWriter(),
             "mininterval": default_mininterval,
             **kwargs,
         }
-
-        return _tqdm(*args, **new_kwargs)
 
     @staticmethod
     def set_lock(lock):
