@@ -12,6 +12,7 @@ from overrides import overrides
 
 from cached_path.common import _split_cloud_path
 from cached_path.schemes.scheme_client import SchemeClient
+from cached_path.tqdm import Tqdm
 
 
 class GsClient(SchemeClient):
@@ -31,7 +32,16 @@ class GsClient(SchemeClient):
 
     @overrides
     def get_resource(self, temp_file: IO) -> None:
-        self.blob.download_to_filename(temp_file.name, checksum="md5", retry=DEFAULT_RETRY)
+        with Tqdm.wrapattr(
+            temp_file,
+            "write",
+            unit="iB",
+            unit_scale=True,
+            unit_divisor=1024,
+            total=self.blob.size,
+            desc="downloading",
+        ) as file_obj:
+            self.blob.download_to_file(file_obj, checksum="md5", retry=DEFAULT_RETRY)
 
     @staticmethod
     def split_gcs_path(resource: str) -> Tuple[str, str]:
