@@ -37,7 +37,7 @@ class S3Client(SchemeClient):
             self.s3_object.load()
         except botocore.exceptions.ClientError as exc:
             if int(exc.response["Error"]["Code"]) == 404:
-                raise FileNotFoundError("file {} not found".format(resource))
+                raise FileNotFoundError("file {} not found".format(self.resource))
             else:
                 raise
         return self.s3_object.e_tag
