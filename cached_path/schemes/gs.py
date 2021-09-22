@@ -4,8 +4,9 @@ Google Cloud Storage.
 
 from typing import Optional, IO, Tuple
 
-from google.cloud import storage
+from google.auth.exceptions import DefaultCredentialsError
 from google.api_core.exceptions import NotFound
+from google.cloud import storage
 from google.cloud.storage.retry import DEFAULT_RETRY
 from overrides import overrides
 
@@ -38,7 +39,10 @@ class GsClient(SchemeClient):
 
     @staticmethod
     def get_gcs_blob(resource: str) -> storage.blob.Blob:
-        gcs_resource = storage.Client()
+        try:
+            gcs_resource = storage.Client()
+        except DefaultCredentialsError:
+            gcs_resource = storage.Client.create_anonymous_client()
         bucket_name, gcs_path = GsClient.split_gcs_path(resource)
         bucket = gcs_resource.bucket(bucket_name)
         blob = bucket.blob(gcs_path)
