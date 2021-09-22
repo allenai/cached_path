@@ -41,7 +41,7 @@ jobs:
         git diff --name-only $(git merge-base origin/main HEAD) | grep '^CHANGELOG.md$' && echo "Thanks for helping keep our CHANGELOG up-to-date!"
 
   checks:
-    name: ${{ matrix.task.name }} (python ${{ matrix.python }})
+    name: python ${{ matrix.python }} - ${{ matrix.task.name }}
     runs-on: [ubuntu-latest]
     timeout-minutes: 30
     strategy:
