@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v0.2.0](https://github.com/allenai/cached_path/releases/tag/v0.2.0) - 2021-09-22
+
 ### Added
 
 - Added function `set_cache_dir` for overriding the global default cache directory.
