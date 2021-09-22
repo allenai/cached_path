@@ -1,4 +1,4 @@
-# cached_path
+# [cached-path](https://cached-path.readthedocs.io/)
 
 A file utility library that provides a unified, simple interface for accessing both local and remote files.
 This can be used behind other APIs that need to access files agnostic to where they are located.
@@ -10,11 +10,20 @@ This can be used behind other APIs that need to access files agnostic to where t
     <a href="https://pypi.org/project/cached_path/">
         <img alt="PyPI" src="https://img.shields.io/pypi/v/cached_path">
     </a>
+    <a href="https://cached-path.readthedocs.io/en/latest/?badge=latest">
+        <img src="https://readthedocs.org/projects/cached-path/badge/?version=latest" alt="Documentation Status" />
+    </a>
     <a href="https://github.com/allenai/cached_path/blob/main/LICENSE">
         <img alt="License" src="https://img.shields.io/github/license/allenai/cached_path.svg?color=blue&cachedrop">
     </a>
     <br/>
 </p>
+
+## Quick links
+
+- [Documentation](https://cached-path.readthedocs.io/)
+- [PyPI Package](https://pypi.org/project/cached-path/)
+- [License](https://github.com/allenai/cached_path/blob/main/LICENSE)
 
 ## Installation
 
