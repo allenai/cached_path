@@ -14,7 +14,7 @@ from cached_path.tqdm import Tqdm
 
 
 class S3Client(SchemeClient):
-    connection_error_types = SchemeClient.connection_error_types + (
+    recoverable_errors = SchemeClient.recoverable_errors + (
         botocore.exceptions.EndpointConnectionError,
     )
     scheme = "s3"

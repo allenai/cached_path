@@ -15,12 +15,16 @@ class SchemeClient:
         from :meth:`get_etag()` and :meth:`get_resource()`.
     """
 
-    connection_error_types: ClassVar[Tuple[BaseException, ...]] = (
+    recoverable_errors: ClassVar[Tuple[BaseException, ...]] = (
         requests.exceptions.ConnectionError,
+        requests.exceptions.Timeout,
     )
     """
-    Subclasses can override this to define error types that will be treated as
-    retriable connection errors.
+    Subclasses can override this to define error types that will be treated as recoverable.
+
+    If ``cached_path()`` catches of one these errors while calling :meth:`get_etag()`, it
+    will log a warning and return the latest cached version if there is one, otherwise
+    it will propogate the error.
     """
 
     scheme: ClassVar[Union[str, Tuple[str, ...]]] = tuple()
@@ -46,13 +50,19 @@ class SchemeClient:
         ``FileNotFoundError``
             If the resource doesn't exist.
 
-        ``Connection error``
-            Any error type defined in ``SchemeClient.connection_error_types`` will
-            be treated as a retriable connection error.
+        ``Recoverable error``
+            Any error type defined in ``SchemeClient.recoverable_errors`` will
+            be treated as a recoverable error.
+
+            This means that when of these is caught by ``cached_path()``,
+            it will look for cached versions of the given resource and return the
+            latest version if there are any.
+
+            Otherwise the error is propogated.
 
         ``Other errors``
-            Any other error type can be raised, in which case ``cached_path()`` will
-            log the error and move on to try to fetch the resource without the ETag.
+            Any other error type can be raised. These errors will be treated non-recoverable
+            and will be propogated immediately by ``cached_path()``.
         """
         raise NotImplementedError
 
@@ -65,12 +75,8 @@ class SchemeClient:
         ``FileNotFoundError``
             If the resource doesn't exist.
 
-        ``Connection error``
-            Any error type defined in ``SchemeClient.connection_error_types`` will
-            be treated as a retriable connection error.
-
         ``Other errors``
-            Any other error type can be raised, in which case ``cached_path()`` will
-            fail and propogate the error.
+            Any other error type can be raised. These errors will be treated non-recoverable
+            and will be propogated immediately by ``cached_path()``.
         """
         raise NotImplementedError

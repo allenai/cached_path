@@ -14,7 +14,7 @@ from cached_path._cached_path import (
     get_from_cache,
     cached_path,
 )
-from cached_path.schemes import HttpClient
+from cached_path.schemes.http import HttpClient, RecoverableServerError
 from cached_path.testing import BaseTestClass
 
 
@@ -58,9 +58,10 @@ class TestCachedPathHttp(BaseTestClass):
         with open(self.glove_file, "rb") as glove:
             self.glove_bytes = glove.read()
 
-    def test_offline_mode(self, monkeypatch):
+    def test_offline_mode_fallback(self, monkeypatch):
         # Ensures `cached_path` just returns the path to the latest cached version
-        # of the resource when there's no internet connection.
+        # of the resource when there's no internet connection, or another recoverable error
+        # occurs.
 
         # First we mock the `get_etag` method so that it raises a `ConnectionError`,
         # like it would if there was no internet connection.
@@ -214,6 +215,22 @@ class TestCachedPathHttp(BaseTestClass):
 
         with pytest.raises(HTTPError):
             cached_path(url_500)
+
+    @responses.activate
+    def test_http_502(self):
+        url_502 = "http://fake.datastore.com/server-error"
+        byt = b"Server error"
+        for method in (responses.GET, responses.HEAD):
+            responses.add(
+                method,
+                url_502,
+                body=byt,
+                status=502,
+                headers={"Content-Length": str(len(byt))},
+            )
+
+        with pytest.raises(RecoverableServerError):
+            cached_path(url_502)
 
 
 class TestCachedPathWithArchive(BaseTestClass):
