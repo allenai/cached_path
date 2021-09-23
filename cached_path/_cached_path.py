@@ -260,9 +260,7 @@ def get_from_cache(url: str, cache_dir: Optional[PathOrStr] = None) -> Tuple[str
     # Get eTag to add to filename, if it exists.
     try:
         etag = client.get_etag()
-    except FileNotFoundError:
-        raise
-    except client.connection_error_types:  # type: ignore
+    except client.recoverable_errors:  # type: ignore
         # We might be offline, in which case we don't want to throw an error
         # just yet. Instead, we'll try to use the latest cached version of the
         # target resource, if it exists. We'll only throw an exception if we
@@ -275,7 +273,7 @@ def get_from_cache(url: str, cache_dir: Optional[PathOrStr] = None) -> Tuple[str
         latest_cached = find_latest_cached(url, cache_dir)
         if latest_cached:
             logger.info(
-                "ETag request failed with connection error, using latest cached "
+                "ETag request failed with recoverable error, using latest cached "
                 "version of %s: %s",
                 url,
                 latest_cached,
@@ -284,16 +282,11 @@ def get_from_cache(url: str, cache_dir: Optional[PathOrStr] = None) -> Tuple[str
             return latest_cached, meta.etag
         else:
             logger.error(
-                "Connection failed while trying to fetch ETag, "
-                "and no cached version of %s could be found",
+                "ETag request failed with recoverable error, "
+                "but no cached version of %s could be found",
                 url,
             )
             raise
-    except Exception as exc:
-        # Other exceptions may be triggered if we were unable to fetch the eTag.
-        # If this is the case, try to proceed without eTag check.
-        logger.error("Encountered error while trying to fetch ETag for %s: %s", url, exc)
-        etag = None
 
     filename = resource_to_filename(url, etag)
 

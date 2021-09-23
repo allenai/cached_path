@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- Renamed `SchemeClient.connection_error_types` to `recoverable_errors`, and included `requests.exceptions.Timeout`.
+- `HttpClient` now considers 502, 503, and 504 as `recoverable_errors`.
+
 ## [v0.2.0](https://github.com/allenai/cached_path/releases/tag/v0.2.0) - 2021-09-22
 
 ### Added

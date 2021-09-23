@@ -9,6 +9,15 @@ from cached_path.tqdm import Tqdm
 from cached_path.schemes.scheme_client import SchemeClient
 
 
+RECOVERABLE_SERVER_ERROR_CODES = (502, 503, 504)
+
+
+class RecoverableServerError(requests.exceptions.HTTPError):
+    """
+    Server returned one of `RECOVERABLE_SERVER_ERROR_CODES`.
+    """
+
+
 def session_with_backoff() -> requests.Session:
     """
     We ran into an issue where http requests to s3 were timing out,
@@ -18,7 +27,7 @@ def session_with_backoff() -> requests.Session:
     <https://stackoverflow.com/questions/23267409/how-to-implement-retry-mechanism-into-python-requests-library>.
     """
     session = requests.Session()
-    retries = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504])
+    retries = Retry(total=5, backoff_factor=1, status_forcelist=RECOVERABLE_SERVER_ERROR_CODES)
     session.mount("http://", HTTPAdapter(max_retries=retries))
     session.mount("https://", HTTPAdapter(max_retries=retries))
     return session
@@ -26,6 +35,7 @@ def session_with_backoff() -> requests.Session:
 
 class HttpClient(SchemeClient):
     scheme = ("http", "https")
+    recoverable_errors = SchemeClient.recoverable_errors + (RecoverableServerError,)
 
     @overrides
     def get_etag(self) -> Optional[str]:
@@ -53,4 +63,6 @@ class HttpClient(SchemeClient):
     def validate_response(self, response):
         if response.status_code == 404:
             raise FileNotFoundError(self.resource)
+        if response.status_code in RECOVERABLE_SERVER_ERROR_CODES:
+            raise RecoverableServerError(response=response)
         response.raise_for_status()
