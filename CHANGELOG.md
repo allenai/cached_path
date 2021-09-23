@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v0.3.0](https://github.com/allenai/cached_path/releases/tag/v0.3.0) - 2021-09-23
+
 ### Changed
 
 - Renamed `SchemeClient.connection_error_types` to `recoverable_errors`, and included `requests.exceptions.Timeout`.
