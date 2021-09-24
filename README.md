@@ -23,6 +23,7 @@ This can be used behind other APIs that need to access files agnostic to where t
 
 - [Documentation](https://cached-path.readthedocs.io/)
 - [PyPI Package](https://pypi.org/project/cached-path/)
+- [Contributing](https://github.com/allenai/cached_path/blob/main/CONTRIBUTING.md)
 - [License](https://github.com/allenai/cached_path/blob/main/LICENSE)
 
 ## Installation
