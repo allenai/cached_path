@@ -4,6 +4,7 @@ import shutil
 import time
 import pathlib
 
+from flaky import flaky
 import pytest
 import responses
 from requests.exceptions import ConnectionError, HTTPError
@@ -317,12 +318,14 @@ class TestCachedPathWithArchive(BaseTestClass):
 
 
 class TestCachedPathGs(BaseTestClass):
+    @flaky
     def test_cache_blob(self):
         path = cached_path("gs://allennlp-public-models/bert-xsmall-dummy.tar.gz")
         assert os.path.isfile(path)
         meta = Meta.from_path(path + ".json")
         assert meta.etag is not None
 
+    @flaky
     def test_cache_and_extract_blob(self):
         path = cached_path(
             "gs://allennlp-public-models/bert-xsmall-dummy.tar.gz", extract_archive=True
@@ -332,12 +335,14 @@ class TestCachedPathGs(BaseTestClass):
         assert meta.extraction_dir
         assert meta.etag is not None
 
+    @flaky
     def test_file_not_found(self):
         with pytest.raises(FileNotFoundError):
             cached_path("gs://allennlp-public-models/does-not-exist")
 
 
 class TestCachedPathS3(BaseTestClass):
+    @flaky
     def test_cache_object(self):
         path = cached_path("s3://allennlp/datasets/squad/squad-dev-v1.1.json")
         assert os.path.isfile(path)
@@ -346,6 +351,7 @@ class TestCachedPathS3(BaseTestClass):
 
 
 class TestCachedPathHf(BaseTestClass):
+    @flaky
     def test_cached_download_no_user_or_org(self):
         path = cached_path("hf://t5-small/config.json")
         assert os.path.isfile(path)
@@ -355,6 +361,7 @@ class TestCachedPathHf(BaseTestClass):
         assert meta.etag is not None
         assert meta.resource == "hf://t5-small/config.json"
 
+    @flaky
     def test_snapshot_download_no_user_or_org(self):
         # This is the smallest snapshot I could find that is not associated with a user / org.
         model_name = "distilbert-base-german-cased"
