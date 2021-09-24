@@ -1,12 +1,10 @@
 import logging
 import os
-import pathlib
+from pathlib import Path
 import shutil
 import tempfile
 
 from cached_path.common import set_cache_dir, get_cache_dir
-
-TEST_DIR = tempfile.mkdtemp(prefix="cached_path_tests")
 
 
 class BaseTestClass:
@@ -15,7 +13,7 @@ class BaseTestClass:
     logging and that creates and destroys a temp directory as a test fixture.
     """
 
-    PROJECT_ROOT = (pathlib.Path(__file__).parent / "..").resolve()
+    PROJECT_ROOT = (Path(__file__).parent / "..").resolve()
     MODULE_ROOT = PROJECT_ROOT / "cached_path"
     TOOLS_ROOT = MODULE_ROOT / "tools"
     TESTS_ROOT = PROJECT_ROOT / "tests"
@@ -29,8 +27,7 @@ class BaseTestClass:
         # in tests.
         logging.getLogger("urllib3.connectionpool").disabled = True
 
-        self.TEST_DIR = pathlib.Path(TEST_DIR)
-
+        self.TEST_DIR = Path(tempfile.mkdtemp(prefix="cached_path_tests"))
         os.makedirs(self.TEST_DIR, exist_ok=True)
 
         self._initial_cache_dir = get_cache_dir()
