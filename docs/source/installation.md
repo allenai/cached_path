@@ -1,27 +1,21 @@
 Installation
 ============
 
-**cached-path** supports Python >= 3.6.
+```{include} ../../README.md
+:start-after: <!-- start py version -->
+:end-before: <!-- end py version -->
+```
 
 ## Installing with `pip`
 
-**cached-path** is available [on PyPI](https://pypi.org/project/cached-path/). Just run
-
-```bash
-pip install cached-path
+```{include} ../../README.md
+:start-after: <!-- start install pip -->
+:end-before: <!-- end install pip -->
 ```
 
 ## Installing from source
 
-To install **cached-path** from source, first clone [the repository](https://github.com/allenai/cached_path):
-
-```bash
-git clone https://github.com/allenai/cached_path.git
-cd cached_path
-```
-
-Then run
-
-```bash
-pip install -e .
+```{include} ../../README.md
+:start-after: <!-- start install source -->
+:end-before: <!-- end install source -->
 ```

@@ -1,7 +1,11 @@
 # [cached-path](https://cached-path.readthedocs.io/)
 
+<!-- start tagline -->
+
 A file utility library that provides a unified, simple interface for accessing both local and remote files.
 This can be used behind other APIs that need to access files agnostic to where they are located.
+
+<!-- end tagline -->
 
 <p align="center">
     <a href="https://github.com/allenai/cached_path/actions">
@@ -28,11 +32,42 @@ This can be used behind other APIs that need to access files agnostic to where t
 
 ## Installation
 
-**cached-path** requires Python 3.6.1 or later.
+<!-- start py version -->
+
+**cached-path** requires Python 3.6 or later.
+
+<!-- end py version -->
+
+### Installing with `pip`
+
+<!-- start install pip -->
+
+**cached-path** is available [on PyPI](https://pypi.org/project/cached-path/). Just run
 
 ```bash
 pip install cached-path
 ```
+
+<!-- end install pip -->
+
+### Installing from source
+
+<!-- start install source -->
+
+To install **cached-path** from source, first clone [the repository](https://github.com/allenai/cached_path):
+
+```bash
+git clone https://github.com/allenai/cached_path.git
+cd cached_path
+```
+
+Then run
+
+```bash
+pip install -e .
+```
+
+<!-- end install source -->
 
 ## Usage
 
@@ -72,6 +107,19 @@ By default the cache directory is `~/.cache/cached_path/`, however there are sev
 
 ## Team
 
+<!-- start team -->
+
 **cached-path** is developed and maintained by the AllenNLP team, backed by [the Allen Institute for Artificial Intelligence (AI2)](https://allenai.org/).
 AI2 is a non-profit institute with the mission to contribute to humanity through high-impact AI research and engineering.
 To learn more about who specifically contributed to this codebase, see [our contributors](https://github.com/allenai/cached_path/graphs/contributors) page.
+
+<!-- end team -->
+
+## License
+
+<!-- start license -->
+
+**cached-path** is licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+A full copy of the license can be found [on GitHub](https://github.com/allenai/cached_path/blob/main/LICENSE).
+
+<!-- end license -->
