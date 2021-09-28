@@ -36,6 +36,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "myst_parser",
+    "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
 ]
 
@@ -48,6 +49,8 @@ templates_path = ["_templates"]
 exclude_patterns = ["_build"]
 
 source_suffix = [".rst", ".md"]
+
+intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 
 
 # -- Options for HTML output -------------------------------------------------
