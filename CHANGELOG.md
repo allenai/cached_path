@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v0.3.1](https://github.com/allenai/cached_path/releases/tag/v0.3.1) - 2021-10-07
+
 ### Fixed
 
 - Fixed `FileLock` issue that `overrides` was complaining about.
