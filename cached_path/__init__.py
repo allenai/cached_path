@@ -11,12 +11,12 @@ You can also extend **cached-path** to support other schemes with :func:`add_sch
 """
 
 from cached_path._cached_path import cached_path
-from cached_path.common import set_cache_dir, get_cache_dir, file_friendly_logging
-from cached_path.schemes import add_scheme_client, SchemeClient
+from cached_path.common import file_friendly_logging, get_cache_dir, set_cache_dir
+from cached_path.schemes import SchemeClient, add_scheme_client
 from cached_path.util import (
-    resource_to_filename,
+    check_tarfile,
     filename_to_url,
     find_latest_cached,
-    check_tarfile,
     is_url_or_existing_file,
+    resource_to_filename,
 )

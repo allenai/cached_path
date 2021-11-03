@@ -1,7 +1,8 @@
 import os
 import warnings
 
-from filelock import FileLock as _FileLock, AcquireReturnProxy
+from filelock import AcquireReturnProxy
+from filelock import FileLock as _FileLock
 from overrides import overrides
 
 from cached_path.common import PathOrStr

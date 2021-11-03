@@ -2,7 +2,7 @@
 AWS S3.
 """
 
-from typing import Optional, IO, Tuple
+from typing import IO, Optional, Tuple
 
 import boto3
 import botocore

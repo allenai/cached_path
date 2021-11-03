@@ -1,7 +1,7 @@
-from dataclasses import dataclass, asdict
 import json
 import os
 import time
+from dataclasses import asdict, dataclass
 from typing import Optional, Set
 
 from cached_path.common import PathOrStr

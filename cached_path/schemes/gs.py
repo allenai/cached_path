@@ -2,10 +2,10 @@
 Google Cloud Storage.
 """
 
-from typing import Optional, IO, Tuple
+from typing import IO, Optional, Tuple
 
-from google.auth.exceptions import DefaultCredentialsError
 from google.api_core.exceptions import NotFound
+from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import storage
 from google.cloud.storage.retry import DEFAULT_RETRY
 from overrides import overrides

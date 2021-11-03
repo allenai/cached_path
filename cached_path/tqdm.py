@@ -3,9 +3,9 @@ Copied over from `allennlp.common.tqdm.Tqdm`.
 Wraps tqdm so we can add configurable
 global defaults for certain tqdm parameters.
 """
-from contextlib import contextmanager
 import logging
 import sys
+from contextlib import contextmanager
 from time import time
 from typing import Optional
 

@@ -1,11 +1,10 @@
 from typing import Set, Type
 
-from cached_path.schemes.scheme_client import SchemeClient
-from cached_path.schemes.http import HttpClient
-from cached_path.schemes.hf import hf_get_from_cache
-from cached_path.schemes.s3 import S3Client
 from cached_path.schemes.gs import GsClient
-
+from cached_path.schemes.hf import hf_get_from_cache
+from cached_path.schemes.http import HttpClient
+from cached_path.schemes.s3 import S3Client
+from cached_path.schemes.scheme_client import SchemeClient
 
 _SCHEME_TO_CLIENT = {}
 

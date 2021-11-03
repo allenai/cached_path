@@ -5,7 +5,8 @@ flake8
 mypy==0.910
 
 # Automatic code formatting
-black==21.9b0
+black==21.10b0
+isort==5.9.3
 
 # Running tests.
 pytest
@@ -26,13 +27,19 @@ setuptools
 wheel
 
 # Mocking HTTP responses
-responses==0.14.0
+responses==0.15.0
 
 # Building docs
 Sphinx==4.2.0
 
 # Sphinx theme: https://sphinx-themes.org/sample-sites/furo/
-furo==2021.9.22
+furo==2021.10.9
 
 # Lets Sphinx parse markdown files in addition to rst.
 myst-parser==0.15.2
+
+# Adds a copy button to code examples in the docs.
+sphinx-copybutton==0.4.0
+
+# Live rebuilding and reloading of docs for developing locally.
+sphinx-autobuild==2021.3.14
