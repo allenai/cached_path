@@ -1,8 +1,8 @@
 import os
 from os import PathLike
 from pathlib import Path
+from typing import Tuple, Union
 from urllib.parse import urlparse
-from typing import Union, Tuple
 
 PathOrStr = Union[str, PathLike]
 

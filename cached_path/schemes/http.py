@@ -1,13 +1,12 @@
-from typing import Optional, IO
+from typing import IO, Optional
 
-from overrides import overrides
 import requests
+from overrides import overrides
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
-from cached_path.tqdm import Tqdm
 from cached_path.schemes.scheme_client import SchemeClient
-
+from cached_path.tqdm import Tqdm
 
 RECOVERABLE_SERVER_ERROR_CODES = (502, 503, 504)
 

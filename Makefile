@@ -1,3 +1,4 @@
 .PHONY : docs
 docs :
-	@cd docs && make html && open build/html/index.html
+	rm -rf docs/build/
+	sphinx-autobuild -b html --watch tango/ --watch examples/ docs/source/ docs/build/

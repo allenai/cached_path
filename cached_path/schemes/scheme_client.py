@@ -1,4 +1,4 @@
-from typing import Optional, IO, Tuple, ClassVar, Union
+from typing import IO, ClassVar, Optional, Tuple, Union
 
 import requests
 

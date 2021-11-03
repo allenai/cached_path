@@ -1,10 +1,10 @@
-from cached_path.util import is_url_or_existing_file
 from cached_path.schemes import (
-    get_supported_schemes,
     SchemeClient,
     add_scheme_client,
     get_scheme_client,
+    get_supported_schemes,
 )
+from cached_path.util import is_url_or_existing_file
 
 
 def test_supported_schemes():

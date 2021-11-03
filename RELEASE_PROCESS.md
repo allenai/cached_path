@@ -1,19 +1,17 @@
-# cached_path GitHub Release Process
+# GitHub Release Process
 
 ## Steps
 
 1. Update the version in `cached_path/version.py`.
 
-2. Update the CHANGELOG.md so that everything under the "Unreleased" section is now under a section corresponding to this release.
-
-3. Run the release script:
+2. Run the release script:
 
     ```bash
     ./scripts/release.sh
     ```
 
-    This will commit the changes to the CHANGELOG and `version.py` files and then create a new tag in git
-    which will trigger a workflow on GitHub Actions that handles the rest.
+    This will automatically update the CHANGELOG, commit the changes to the CHANGELOG and `version.py` (and any other files you might have changed),
+    and then create a new tag in git which will trigger a workflow on GitHub Actions that handles the rest.
 
 ## Fixing a failed release
 

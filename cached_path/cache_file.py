@@ -1,10 +1,9 @@
-import os
 import logging
-from pathlib import Path
+import os
 import tempfile
+from pathlib import Path
 
 from cached_path.common import PathOrStr
-
 
 logger = logging.getLogger(__name__)
 

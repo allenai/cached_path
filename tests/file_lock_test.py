@@ -1,7 +1,7 @@
 import os
 
-from filelock import Timeout
 import pytest
+from filelock import Timeout
 
 from cached_path.file_lock import FileLock
 from cached_path.testing import BaseTestClass

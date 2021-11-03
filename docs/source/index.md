@@ -11,7 +11,6 @@
 
 installation
 overview
-CONTRIBUTING
 CHANGELOG
 ```
 
@@ -28,6 +27,7 @@ api/util
 :hidden:
 :caption: Development
 
+CONTRIBUTING
 License <https://raw.githubusercontent.com/allenai/cached_path/main/LICENSE>
 GitHub Repository <https://github.com/allenai/cached_path>
 ```

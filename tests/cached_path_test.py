@@ -1,22 +1,19 @@
-from collections import Counter
 import os
+import pathlib
 import shutil
 import time
-import pathlib
+from collections import Counter
 
-from flaky import flaky
 import pytest
 import responses
+from flaky import flaky
 from requests.exceptions import ConnectionError, HTTPError
 
-from cached_path.util import resource_to_filename
+from cached_path._cached_path import cached_path, get_from_cache
 from cached_path.meta import Meta
-from cached_path._cached_path import (
-    get_from_cache,
-    cached_path,
-)
 from cached_path.schemes.http import HttpClient, RecoverableServerError
 from cached_path.testing import BaseTestClass
+from cached_path.util import resource_to_filename
 
 
 class TestCachedPathHttp(BaseTestClass):

@@ -17,7 +17,6 @@ sys.path.insert(0, os.path.abspath("../../"))
 
 from cached_path.version import VERSION, VERSION_SHORT  # noqa: E402
 
-
 # -- Project information -----------------------------------------------------
 
 project = "cached-path"
@@ -38,6 +37,8 @@ extensions = [
     "myst_parser",
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
+    "sphinx.ext.doctest",
+    "sphinx_copybutton",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -68,3 +69,5 @@ html_title = f"cached-path v{VERSION}"
 html_static_path = ["_static"]
 
 html_css_files = ["css/custom.css"]
+
+html_favicon = "_static/favicon.ico"

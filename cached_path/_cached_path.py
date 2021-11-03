@@ -1,23 +1,22 @@
-import os
 import logging
-import tempfile
-from urllib.parse import urlparse
-from typing import Optional, Tuple
-from zipfile import ZipFile, is_zipfile
-import tarfile
+import os
 import shutil
+import tarfile
+import tempfile
+from typing import Optional, Tuple
+from urllib.parse import urlparse
+from zipfile import ZipFile, is_zipfile
 
 from cached_path.cache_file import CacheFile
 from cached_path.common import PathOrStr, get_cache_dir
 from cached_path.file_lock import FileLock
 from cached_path.meta import Meta
-from cached_path.schemes import get_scheme_client, get_supported_schemes, hf_get_from_cache
-from cached_path.util import (
-    resource_to_filename,
-    find_latest_cached,
-    check_tarfile,
+from cached_path.schemes import (
+    get_scheme_client,
+    get_supported_schemes,
+    hf_get_from_cache,
 )
-
+from cached_path.util import check_tarfile, find_latest_cached, resource_to_filename
 
 logger = logging.getLogger("cached_path")
 

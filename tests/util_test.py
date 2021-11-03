@@ -4,8 +4,8 @@ import pathlib
 
 import pytest
 
-from cached_path.util import resource_to_filename, filename_to_url
 from cached_path.testing import BaseTestClass
+from cached_path.util import filename_to_url, resource_to_filename
 
 
 class TestUtils(BaseTestClass):

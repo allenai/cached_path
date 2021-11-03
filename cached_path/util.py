@@ -1,13 +1,13 @@
 import glob
-from hashlib import sha256
 import os
 import tarfile
-from typing import Optional, Tuple, List
+from hashlib import sha256
+from typing import List, Optional, Tuple
 from urllib.parse import urlparse
 
-from cached_path.schemes import get_supported_schemes
 from cached_path.common import PathOrStr, get_cache_dir
 from cached_path.meta import Meta
+from cached_path.schemes import get_supported_schemes
 
 
 def resource_to_filename(resource: str, etag: Optional[str] = None) -> str:

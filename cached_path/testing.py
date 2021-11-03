@@ -1,10 +1,10 @@
 import logging
 import os
-from pathlib import Path
 import shutil
 import tempfile
+from pathlib import Path
 
-from cached_path.common import set_cache_dir, get_cache_dir
+from cached_path.common import get_cache_dir, set_cache_dir
 
 
 class BaseTestClass:
