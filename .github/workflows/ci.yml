@@ -100,7 +100,7 @@ jobs:
         if: steps.virtualenv-cache.outputs.cache-hit == 'true'
         run: |
           . .venv/bin/activate
-          pip install --no-deps -e .[${{ matrix.task.extras }}]
+          pip install --no-deps -e .[dev]
 
       - name: Show environment info
         run: |
