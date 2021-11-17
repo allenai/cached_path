@@ -23,10 +23,12 @@ class FileLock(_FileLock):
         super().__init__(str(lock_file), timeout=timeout)
         self._read_only_ok = read_only_ok
 
-    @overrides
-    def acquire(self, timeout=None, poll_intervall=0.05) -> AcquireReturnProxy:
+    # TODO (epwalsh): remove `check_signature=False` once filelock removes the deprecated
+    # `poll_intervall` parameter.
+    @overrides(check_signature=False)
+    def acquire(self, timeout=None, poll_interval=0.05, **kwargs) -> AcquireReturnProxy:
         try:
-            return super().acquire(timeout=timeout, poll_intervall=poll_intervall)
+            return super().acquire(timeout=timeout, poll_interval=poll_interval, **kwargs)
         except OSError as err:
             # OSError could be a lot of different things, but what we're looking
             # for in particular are permission errors, such as:
