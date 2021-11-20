@@ -3,7 +3,6 @@ import warnings
 
 from filelock import AcquireReturnProxy
 from filelock import FileLock as _FileLock
-from overrides import overrides
 
 from cached_path.common import PathOrStr
 
@@ -23,7 +22,6 @@ class FileLock(_FileLock):
         super().__init__(str(lock_file), timeout=timeout)
         self._read_only_ok = read_only_ok
 
-    @overrides
     def acquire(self, timeout=None, poll_interval=0.05, **kwargs) -> AcquireReturnProxy:
         try:
             return super().acquire(timeout=timeout, poll_interval=poll_interval, **kwargs)
