@@ -6,7 +6,6 @@ from typing import IO, Optional, Tuple
 
 import boto3
 import botocore
-from overrides import overrides
 
 from cached_path.common import _split_cloud_path
 from cached_path.schemes.scheme_client import SchemeClient
@@ -32,7 +31,6 @@ class S3Client(SchemeClient):
             s3_resource = session.resource("s3")
         self.s3_object = s3_resource.Object(bucket_name, s3_path)
 
-    @overrides
     def get_etag(self) -> Optional[str]:
         try:
             self.s3_object.load()
@@ -43,7 +41,6 @@ class S3Client(SchemeClient):
                 raise
         return self.s3_object.e_tag
 
-    @overrides
     def get_resource(self, temp_file: IO) -> None:
         progress = Tqdm.tqdm(
             unit="iB",

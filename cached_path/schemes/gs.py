@@ -8,7 +8,6 @@ from google.api_core.exceptions import NotFound
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import storage
 from google.cloud.storage.retry import DEFAULT_RETRY
-from overrides import overrides
 
 from cached_path.common import _split_cloud_path
 from cached_path.schemes.scheme_client import SchemeClient
@@ -22,7 +21,6 @@ class GsClient(SchemeClient):
         super().__init__(resource)
         self.blob = GsClient.get_gcs_blob(resource)
 
-    @overrides
     def get_etag(self) -> Optional[str]:
         try:
             self.blob.reload()
@@ -30,7 +28,6 @@ class GsClient(SchemeClient):
             raise FileNotFoundError(self.resource)
         return self.blob.etag or self.blob.md5_hash
 
-    @overrides
     def get_resource(self, temp_file: IO) -> None:
         with Tqdm.wrapattr(
             temp_file,
