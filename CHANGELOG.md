@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.0.0](https://github.com/allenai/cached_path/releases/tag/v1.0.0) - 2021-11-29
+
 ### Removed
 
 - Removed dependency on the `overrides` package
