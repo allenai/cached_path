@@ -1,7 +1,6 @@
 from typing import IO, Optional
 
 import requests
-from overrides import overrides
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
@@ -36,14 +35,12 @@ class HttpClient(SchemeClient):
     scheme = ("http", "https")
     recoverable_errors = SchemeClient.recoverable_errors + (RecoverableServerError,)
 
-    @overrides
     def get_etag(self) -> Optional[str]:
         with session_with_backoff() as session:
             response = session.head(self.resource, allow_redirects=True)
         self.validate_response(response)
         return response.headers.get("ETag")
 
-    @overrides
     def get_resource(self, temp_file: IO) -> None:
         with session_with_backoff() as session:
             response = session.get(self.resource, stream=True)
