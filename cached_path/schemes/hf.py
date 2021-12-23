@@ -83,5 +83,7 @@ def hf_get_from_cache(url: str, cache_dir: PathOrStr) -> str:
             if exc.response.status_code == 404:
                 return hf_hub_download(url, identifier, None, cache_dir)
             raise
+        except ValueError:
+            return hf_hub_download(url, identifier, None, cache_dir)
     else:
         return hf_hub_download(url, identifier, None, cache_dir)

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Fixed snapshot downloads from HuggingFace Hub.
+
 ## [v1.0.1](https://github.com/allenai/cached_path/releases/tag/v1.0.1) - 2021-12-02
 
 ### Added
