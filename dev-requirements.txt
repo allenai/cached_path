@@ -33,7 +33,7 @@ responses==0.17.0
 Sphinx==4.4.0
 
 # Sphinx theme: https://sphinx-themes.org/sample-sites/furo/
-furo==2022.1.2
+furo==2022.2.14.1
 
 # Lets Sphinx parse markdown files in addition to rst.
 myst-parser==0.16.1
