@@ -53,6 +53,9 @@ source_suffix = [".rst", ".md"]
 
 intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 
+# Tell myst-parser to assign header anchors for h1-h3.
+myst_heading_anchors = 4
+
 
 # -- Options for HTML output -------------------------------------------------
 

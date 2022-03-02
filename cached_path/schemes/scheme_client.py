@@ -1,4 +1,4 @@
-from typing import IO, ClassVar, Optional, Tuple, Union
+from typing import IO, ClassVar, Optional, Tuple, Type, Union
 
 import requests
 
@@ -15,7 +15,7 @@ class SchemeClient:
         from :meth:`get_etag()` and :meth:`get_resource()`.
     """
 
-    recoverable_errors: ClassVar[Tuple[BaseException, ...]] = (
+    recoverable_errors: ClassVar[Tuple[Type[BaseException], ...]] = (
         requests.exceptions.ConnectionError,
         requests.exceptions.Timeout,
     )
