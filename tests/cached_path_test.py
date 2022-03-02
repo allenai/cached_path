@@ -26,7 +26,6 @@ class TestCachedPathHttp(BaseTestClass):
             body=byt,
             status=200,
             content_type="application/gzip",
-            stream=True,
             headers={"Content-Length": str(len(byt))},
         )
 
@@ -274,7 +273,6 @@ class TestCachedPathWithArchive(BaseTestClass):
             body=byt,
             status=200,
             content_type="application/tar+gzip",
-            stream=True,
             headers={"Content-Length": str(len(byt))},
         )
         responses.add(
@@ -299,7 +297,6 @@ class TestCachedPathWithArchive(BaseTestClass):
             body=byt,
             status=200,
             content_type="application/zip",
-            stream=True,
             headers={"Content-Length": str(len(byt))},
         )
         responses.add(
