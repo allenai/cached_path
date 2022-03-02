@@ -3,6 +3,11 @@ Overview
 
 The main functionality of **cached-path** is provided by the function {func}`~cached_path.cached_path()`.
 
+```{testsetup}
+>>> from cached_path import cached_path
+>>>
+```
+
 ## Basic usage
 
 {func}`~cached_path.cached_path()` has a single positional argument that is either the path to a local file or the URL of a remote resource.
@@ -11,7 +16,6 @@ For example, assuming the file `README.md` exists locally, the returned by is ju
 the same path that was provided:
 
 ```python
->>> from cached_path import cached_path
 >>> print(cached_path("README.md"))
 README.md
 >>>
@@ -20,9 +24,9 @@ README.md
 But for remote resources, the resource will be downloaded and cached to the cache directory:
 
 ```python
->>> from cached_path import get_cache_dir
 >>> path = cached_path("https://github.com/allenai/cached_path/blob/main/README.md")
 >>> assert path.is_file()
+>>> from cached_path import get_cache_dir
 >>> assert path.parent == get_cache_dir()
 >>>
 ```
