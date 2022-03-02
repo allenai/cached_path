@@ -3,20 +3,23 @@ import os
 import shutil
 import tarfile
 import tempfile
+from pathlib import Path
 from typing import Optional, Tuple
 from urllib.parse import urlparse
 from zipfile import ZipFile, is_zipfile
 
-from cached_path.cache_file import CacheFile
-from cached_path.common import PathOrStr, get_cache_dir
-from cached_path.file_lock import FileLock
-from cached_path.meta import Meta
-from cached_path.schemes import (
-    get_scheme_client,
-    get_supported_schemes,
-    hf_get_from_cache,
+from .cache_file import CacheFile
+from .common import PathOrStr, get_cache_dir
+from .file_lock import FileLock
+from .meta import Meta
+from .schemes import get_scheme_client, get_supported_schemes, hf_get_from_cache
+from .util import (
+    _lock_file_path,
+    _meta_file_path,
+    check_tarfile,
+    find_latest_cached,
+    resource_to_filename,
 )
-from cached_path.util import check_tarfile, find_latest_cached, resource_to_filename
 
 logger = logging.getLogger("cached_path")
 
@@ -26,7 +29,7 @@ def cached_path(
     cache_dir: Optional[PathOrStr] = None,
     extract_archive: bool = False,
     force_extract: bool = False,
-) -> str:
+) -> Path:
     """
     Given something that might be a URL or local path, determine which.
     If it's a remote resource, download the file and cache it, and
@@ -96,11 +99,8 @@ def cached_path(
 
     Returns
     -------
-    ``str``
+    :class:`pathlib.Path`
         The local path to the (potentially cached) resource.
-
-        .. important::
-            The return type is always a ``str`` even if the original argument was a ``Path``.
 
     Raises
     ------
@@ -116,15 +116,14 @@ def cached_path(
         the resource.
 
     """
-    cache_dir = cache_dir if cache_dir else get_cache_dir()
-    cache_dir = os.path.expanduser(cache_dir)
-    os.makedirs(cache_dir, exist_ok=True)
+    cache_dir = Path(cache_dir if cache_dir else get_cache_dir()).expanduser()
+    cache_dir.mkdir(parents=True, exist_ok=True)
 
     if not isinstance(url_or_filename, str):
         url_or_filename = str(url_or_filename)
 
-    file_path: str
-    extraction_path: Optional[str] = None
+    file_path: Path
+    extraction_path: Optional[Path] = None
     etag: Optional[str] = None
 
     # If we're using the /a/b/foo.zip!c/d/file.txt syntax, handle it here.
@@ -135,16 +134,16 @@ def cached_path(
 
         # Call 'cached_path' recursively now to get the local path to the archive itself.
         cached_archive_path = cached_path(archive_path, cache_dir, True, force_extract)
-        if not os.path.isdir(cached_archive_path):
+        if not cached_archive_path.is_dir():
             raise ValueError(
                 f"{url_or_filename} uses the ! syntax, but does not specify an archive file."
             )
 
         # Now return the full path to the desired file within the extracted archive,
         # provided it exists.
-        file_path = os.path.join(cached_archive_path, file_name)
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"file {file_name} not found within {archive_path}")
+        file_path = cached_archive_path / file_name
+        if not file_path.exists():
+            raise FileNotFoundError(f"'{file_name}' not found within '{archive_path}'")
 
         return file_path
 
@@ -157,20 +156,20 @@ def cached_path(
         if extract_archive and (is_zipfile(file_path) or tarfile.is_tarfile(file_path)):
             # This is the path the file should be extracted to.
             # For example ~/.cached_path/cache/234234.21341 -> ~/.cached_path/cache/234234.21341-extracted
-            extraction_path = file_path + "-extracted"
+            extraction_path = file_path.parent / (file_path.name + "-extracted")
 
     else:
-        url_or_filename = os.path.expanduser(url_or_filename)
+        url_or_filename = Path(url_or_filename)
 
-        if os.path.exists(url_or_filename):
+        if url_or_filename.exists():
             # File, and it exists.
             file_path = url_or_filename
             # Normalize the path.
-            url_or_filename = os.path.abspath(url_or_filename)
+            url_or_filename = url_or_filename.resolve()
 
             if (
                 extract_archive
-                and os.path.isfile(file_path)
+                and file_path.is_file()
                 and (is_zipfile(file_path) or tarfile.is_tarfile(file_path))
             ):
                 # We'll use a unique directory within the cache to root to extract the archive to.
@@ -180,7 +179,7 @@ def cached_path(
                     resource_to_filename(url_or_filename, str(os.path.getmtime(file_path)))
                     + "-extracted"
                 )
-                extraction_path = os.path.join(cache_dir, extraction_name)
+                extraction_path = cache_dir / extraction_name
 
         elif parsed.scheme == "":
             # File, but it doesn't exist.
@@ -197,7 +196,7 @@ def cached_path(
             return extraction_path
 
         # Extract it.
-        with FileLock(extraction_path + ".lock"):
+        with FileLock(_lock_file_path(extraction_path)):
             # Check again if the directory exists now that we've acquired the lock.
             if os.path.isdir(extraction_path) and os.listdir(extraction_path):
                 if force_extract:
@@ -244,12 +243,12 @@ def cached_path(
     return file_path
 
 
-def get_from_cache(url: str, cache_dir: Optional[PathOrStr] = None) -> Tuple[str, Optional[str]]:
+def get_from_cache(url: str, cache_dir: Optional[PathOrStr] = None) -> Tuple[Path, Optional[str]]:
     """
     Given a URL, look for the corresponding dataset in the local cache.
     If it's not there, download it. Then return the path to the cached file and the ETag.
     """
-    cache_dir = cache_dir if cache_dir else get_cache_dir()
+    cache_dir = Path(cache_dir if cache_dir else get_cache_dir())
 
     if url.startswith("hf://"):
         return hf_get_from_cache(url, cache_dir), None
@@ -277,7 +276,7 @@ def get_from_cache(url: str, cache_dir: Optional[PathOrStr] = None) -> Tuple[str
                 url,
                 latest_cached,
             )
-            meta = Meta.from_path(latest_cached + ".json")
+            meta = Meta.from_path(_meta_file_path(latest_cached))
             return latest_cached, meta.etag
         else:
             logger.error(
@@ -290,7 +289,7 @@ def get_from_cache(url: str, cache_dir: Optional[PathOrStr] = None) -> Tuple[str
     filename = resource_to_filename(url, etag)
 
     # Get cache path to put the file.
-    cache_path = os.path.join(cache_dir, filename)
+    cache_path = cache_dir / filename
 
     # Multiple processes may be trying to cache the same file at once, so we need
     # to be a little careful to avoid race conditions. We do this using a lock file.
@@ -298,7 +297,7 @@ def get_from_cache(url: str, cache_dir: Optional[PathOrStr] = None) -> Tuple[str
     # on the call to `lock.acquire()` until the process currently holding the lock
     # releases it.
     logger.debug("waiting to acquire lock on %s", cache_path)
-    with FileLock(cache_path + ".lock", read_only_ok=True):
+    with FileLock(_lock_file_path(cache_path), read_only_ok=True):
         if os.path.exists(cache_path):
             logger.info("cache of %s is up-to-date", url)
         else:

@@ -3,7 +3,7 @@ import os
 import tempfile
 from pathlib import Path
 
-from cached_path.common import PathOrStr
+from .common import PathOrStr
 
 logger = logging.getLogger(__name__)
 

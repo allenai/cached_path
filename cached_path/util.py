@@ -1,16 +1,15 @@
-import glob
 import os
 import tarfile
 from hashlib import sha256
+from pathlib import Path
 from typing import List, Optional, Tuple
 from urllib.parse import urlparse
 
-from cached_path.common import PathOrStr, get_cache_dir
-from cached_path.meta import Meta
-from cached_path.schemes import get_supported_schemes
+from .common import PathOrStr, get_cache_dir
+from .meta import Meta
 
 
-def resource_to_filename(resource: str, etag: Optional[str] = None) -> str:
+def resource_to_filename(resource: PathOrStr, etag: Optional[str] = None) -> str:
     """
     Convert a ``resource`` into a hashed filename in a repeatable way.
     If ``etag`` is specified, append its hash to the resources', delimited
@@ -18,7 +17,7 @@ def resource_to_filename(resource: str, etag: Optional[str] = None) -> str:
 
     THis is essentially the inverse of :func:`filename_to_url()`.
     """
-    resource_bytes = resource.encode("utf-8")
+    resource_bytes = str(resource).encode("utf-8")
     resource_hash = sha256(resource_bytes)
     filename = resource_hash.hexdigest()
 
@@ -52,18 +51,18 @@ def filename_to_url(
     return metadata.resource, metadata.etag
 
 
-def find_latest_cached(url: str, cache_dir: Optional[PathOrStr] = None) -> Optional[str]:
+def find_latest_cached(url: str, cache_dir: Optional[PathOrStr] = None) -> Optional[Path]:
     """
     Get the path to the latest cached version of a given resource.
     """
-    cache_dir = cache_dir if cache_dir else get_cache_dir()
+    cache_dir = Path(cache_dir if cache_dir else get_cache_dir())
     filename = resource_to_filename(url)
-    cache_path = os.path.join(cache_dir, filename)
-    candidates: List[Tuple[str, float]] = []
-    for path in glob.glob(cache_path + "*"):
-        if path.endswith(".json") or path.endswith("-extracted") or path.endswith(".lock"):
+    candidates: List[Tuple[Path, float]] = []
+    for path in cache_dir.glob(f"{filename}*"):
+        print(path, path.suffix, path.name)
+        if path.suffix in {".json", ".lock"} or path.name.endswith("-extracted"):
             continue
-        mtime = os.path.getmtime(path)
+        mtime = path.stat().st_mtime
         candidates.append((path, mtime))
     # Sort candidates by modification time, newest first.
     candidates.sort(key=lambda x: x[1], reverse=True)
@@ -121,6 +120,17 @@ def is_url_or_existing_file(url_or_filename: PathOrStr) -> bool:
     """
     if url_or_filename is None:
         return False
+
+    from .schemes import get_supported_schemes
+
     url_or_filename = os.path.expanduser(str(url_or_filename))
     parsed = urlparse(url_or_filename)
     return parsed.scheme in get_supported_schemes() or os.path.exists(url_or_filename)
+
+
+def _lock_file_path(cache_path: Path) -> Path:
+    return cache_path.parent / (cache_path.name + ".lock")
+
+
+def _meta_file_path(cache_path: Path) -> Path:
+    return cache_path.parent / (cache_path.name + ".json")

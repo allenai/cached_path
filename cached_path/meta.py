@@ -4,7 +4,7 @@ import time
 from dataclasses import asdict, dataclass
 from typing import Optional, Set
 
-from cached_path.common import PathOrStr
+from .common import PathOrStr
 
 
 @dataclass

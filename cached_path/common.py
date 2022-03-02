@@ -46,11 +46,11 @@ def set_cache_dir(cache_dir: PathOrStr) -> None:
     CACHE_DIRECTORY = Path(cache_dir)
 
 
-def get_cache_dir() -> PathOrStr:
+def get_cache_dir() -> Path:
     """
     Get the global default cache directory.
     """
-    return CACHE_DIRECTORY
+    return Path(CACHE_DIRECTORY)
 
 
 def file_friendly_logging(on: bool = True) -> None:
