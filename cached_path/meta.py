@@ -99,7 +99,7 @@ class Meta:
             return os.path.getsize(path)
         inodes: Set[int] = set()
         total_size = 0
-        for dirpath, dirnames, filenames in os.walk(path):
+        for dirpath, dirnames, filenames in os.walk(str(path)):
             for f in filenames:
                 fp = os.path.join(dirpath, f)
                 # skip if it is symbolic link or the same as a file we've already accounted
