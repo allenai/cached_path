@@ -34,7 +34,7 @@ This can be used behind other APIs that need to access files agnostic to where t
 
 <!-- start py version -->
 
-**cached-path** requires Python 3.6 or later.
+**cached-path** requires Python 3.7 or later.
 
 <!-- end py version -->
 
