@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Python >= 3.7 now required.
+- `cached_path()` now returns a `Path` instead of a `str`.
 
 ## [v1.0.2](https://github.com/allenai/cached_path/releases/tag/v1.0.2) - 2021-12-23
 

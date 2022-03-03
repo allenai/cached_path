@@ -11,6 +11,7 @@
 
 installation
 overview
+faq
 ```
 
 ```{toctree}

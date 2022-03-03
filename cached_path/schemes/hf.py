@@ -5,7 +5,7 @@ Unlike the other schemes, we don't implement a `SchemeClient` subclass here beca
 `huggingface_hub` handles the caching logic internally in essentially the same way.
 """
 
-import os
+from pathlib import Path
 from typing import Optional
 
 import huggingface_hub as hf_hub
@@ -14,12 +14,13 @@ import requests
 from cached_path.common import PathOrStr
 from cached_path.file_lock import FileLock
 from cached_path.meta import Meta
+from cached_path.util import _lock_file_path, _meta_file_path
 from cached_path.version import VERSION
 
 
 def hf_hub_download(
     url: str, model_identifier: str, filename: Optional[str], cache_dir: PathOrStr
-) -> str:
+) -> Path:
     revision: Optional[str]
     if "@" in model_identifier:
         repo_id = model_identifier.split("@")[0]
@@ -28,9 +29,10 @@ def hf_hub_download(
         repo_id = model_identifier
         revision = None
 
+    cache_path: Path
     if filename is not None:
         hub_url = hf_hub.hf_hub_url(repo_id=repo_id, filename=filename, revision=revision)
-        cache_path = str(
+        cache_path = Path(
             hf_hub.cached_download(
                 url=hub_url,
                 library_name="cached_path",
@@ -41,18 +43,18 @@ def hf_hub_download(
         # HF writes it's own meta '.json' file which uses the same format we used to use and still
         # support, but is missing some fields that we like to have.
         # So we overwrite it when it we can.
-        with FileLock(cache_path + ".lock", read_only_ok=True):
-            meta = Meta.from_path(cache_path + ".json")
+        with FileLock(_lock_file_path(cache_path), read_only_ok=True):
+            meta = Meta.from_path(_meta_file_path(cache_path))
             # The file HF writes will have 'resource' set to the 'http' URL corresponding to the 'hf://' URL,
             # but we want 'resource' to be the original 'hf://' URL.
             if meta.resource != url:
                 meta.resource = url
                 meta.to_file()
     else:
-        cache_path = str(hf_hub.snapshot_download(repo_id, revision=revision, cache_dir=cache_dir))
+        cache_path = Path(hf_hub.snapshot_download(repo_id, revision=revision, cache_dir=cache_dir))
         # Need to write the meta file for snapshot downloads if it doesn't exist.
-        with FileLock(cache_path + ".lock", read_only_ok=True):
-            if not os.path.exists(cache_path + ".json"):
+        with FileLock(_lock_file_path(cache_path), read_only_ok=True):
+            if not _meta_file_path(cache_path).is_file():
                 meta = Meta.new(
                     url,
                     cache_path,
@@ -62,7 +64,7 @@ def hf_hub_download(
     return cache_path
 
 
-def hf_get_from_cache(url: str, cache_dir: PathOrStr) -> str:
+def hf_get_from_cache(url: str, cache_dir: PathOrStr) -> Path:
     # Remove the 'hf://' prefix
     identifier = url[5:]
 

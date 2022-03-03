@@ -4,7 +4,7 @@ import warnings
 from filelock import AcquireReturnProxy
 from filelock import FileLock as _FileLock
 
-from cached_path.common import PathOrStr
+from .common import PathOrStr
 
 
 class FileLock(_FileLock):

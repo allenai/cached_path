@@ -1,8 +1,7 @@
-import os
-import pathlib
 import shutil
 import time
 from collections import Counter
+from pathlib import Path
 
 import pytest
 import responses
@@ -13,7 +12,7 @@ from cached_path._cached_path import cached_path, get_from_cache
 from cached_path.meta import Meta
 from cached_path.schemes.http import HttpClient, RecoverableServerError
 from cached_path.testing import BaseTestClass
-from cached_path.util import resource_to_filename
+from cached_path.util import _lock_file_path, _meta_file_path, resource_to_filename
 
 
 class TestCachedPathHttp(BaseTestClass):
@@ -71,10 +70,14 @@ class TestCachedPathHttp(BaseTestClass):
 
         # We'll create two cached versions of this fake resource using two different etags.
         etags = ['W/"3e5885bfcbf4c47bc4ee9e2f6e5ea916"', 'W/"3e5885bfcbf4c47bc4ee9e2f6e5ea918"']
-        filenames = [os.path.join(self.TEST_DIR, resource_to_filename(url, etag)) for etag in etags]
+        filenames = [self.TEST_DIR / resource_to_filename(url, etag) for etag in etags]
         for filename, etag in zip(filenames, etags):
             meta = Meta(
-                resource=url, cached_path=filename, creation_time=time.time(), etag=etag, size=2341
+                resource=url,
+                cached_path=str(filename),
+                creation_time=time.time(),
+                etag=etag,
+                size=2341,
             )
             meta.to_file()
             with open(filename, "w") as f:
@@ -83,9 +86,9 @@ class TestCachedPathHttp(BaseTestClass):
             time.sleep(1.1)
 
         # Should know to ignore lock files and extraction directories.
-        with open(filenames[-1] + ".lock", "w") as f:
+        with open(_lock_file_path(filenames[-1]), "w") as f:
             f.write("")
-        os.mkdir(filenames[-1] + "-extracted")
+        (filenames[-1].parent / (filenames[-1].name + "-extracted")).mkdir()
 
         # The version corresponding to the last etag should be returned, since
         # that one has the latest "last modified" time.
@@ -93,8 +96,8 @@ class TestCachedPathHttp(BaseTestClass):
 
         # We also want to make sure this works when the latest cached version doesn't
         # have a corresponding etag.
-        filename = os.path.join(self.TEST_DIR, resource_to_filename(url))
-        meta = Meta(resource=url, cached_path=filename, creation_time=time.time(), size=2341)
+        filename = self.TEST_DIR / resource_to_filename(url)
+        meta = Meta(resource=url, cached_path=str(filename), creation_time=time.time(), size=2341)
         meta.to_file()
         with open(filename, "w") as f:
             f.write("some random data")
@@ -107,9 +110,8 @@ class TestCachedPathHttp(BaseTestClass):
         self.set_up_glove(url, self.glove_bytes, change_etag_every=2)
 
         filename, _ = get_from_cache(url)
-        assert filename == os.path.join(self.TEST_DIR, resource_to_filename(url, etag="0"))
-        assert os.path.exists(filename + ".json")
-        meta = Meta.from_path(filename + ".json")
+        assert filename == self.TEST_DIR / resource_to_filename(url, etag="0")
+        meta = Meta.from_path(_meta_file_path(filename))
         assert meta.resource == url
 
         # We should have made one HEAD request and one GET request.
@@ -138,7 +140,7 @@ class TestCachedPathHttp(BaseTestClass):
         # A third call should have a different ETag and should force a new download,
         # which means another HEAD call and another GET call.
         filename3, _ = get_from_cache(url)
-        assert filename3 == os.path.join(self.TEST_DIR, resource_to_filename(url, etag="1"))
+        assert filename3 == self.TEST_DIR / resource_to_filename(url, etag="1")
 
         method_counts = Counter(call.request.method for call in responses.calls)
         assert len(method_counts) == 2
@@ -162,13 +164,13 @@ class TestCachedPathHttp(BaseTestClass):
             filename = cached_path("fakescheme://path/to/fake/file.tar.gz")
 
         # existing file as path
-        assert cached_path(self.glove_file) == str(self.glove_file)
+        assert cached_path(self.glove_file) == self.glove_file
 
         # caches urls
         filename = cached_path(url)
 
         assert len(responses.calls) == 2
-        assert filename == os.path.join(self.TEST_DIR, resource_to_filename(url, etag="0"))
+        assert filename == self.TEST_DIR / resource_to_filename(url, etag="0")
 
         with open(filename, "rb") as cached_file:
             assert cached_file.read() == self.glove_bytes
@@ -247,12 +249,12 @@ class TestCachedPathWithArchive(BaseTestClass):
         with pytest.raises(ValueError):
             cached_path(dangerous_file, extract_archive=True)
 
-    def check_extracted(self, extracted: str):
-        assert os.path.isdir(extracted)
-        assert pathlib.Path(extracted).parent == self.TEST_DIR
-        assert os.path.exists(os.path.join(extracted, "dummy.txt"))
-        assert os.path.exists(os.path.join(extracted, "folder/utf-8_sample.txt"))
-        assert os.path.exists(extracted + ".json")
+    def check_extracted(self, extracted: Path):
+        assert extracted.is_dir()
+        assert extracted.parent == self.TEST_DIR
+        assert (extracted / "dummy.txt").is_file()
+        assert (extracted / "folder/utf-8_sample.txt").is_file()
+        assert _meta_file_path(extracted).is_file()
 
     def test_cached_path_extract_local_tar(self):
         extracted = cached_path(self.tar_file, extract_archive=True)
@@ -283,7 +285,7 @@ class TestCachedPathWithArchive(BaseTestClass):
         )
 
         extracted = cached_path(url, extract_archive=True)
-        assert extracted.endswith("-extracted")
+        assert extracted.name.endswith("-extracted")
         self.check_extracted(extracted)
 
     @responses.activate
@@ -307,7 +309,7 @@ class TestCachedPathWithArchive(BaseTestClass):
         )
 
         extracted = cached_path(url, extract_archive=True)
-        assert extracted.endswith("-extracted")
+        assert extracted.name.endswith("-extracted")
         self.check_extracted(extracted)
 
 
@@ -315,8 +317,8 @@ class TestCachedPathGs(BaseTestClass):
     @flaky
     def test_cache_blob(self):
         path = cached_path("gs://allennlp-public-models/bert-xsmall-dummy.tar.gz")
-        assert os.path.isfile(path)
-        meta = Meta.from_path(path + ".json")
+        assert path.is_file()
+        meta = Meta.from_path(_meta_file_path(path))
         assert meta.etag is not None
 
     @flaky
@@ -324,8 +326,8 @@ class TestCachedPathGs(BaseTestClass):
         path = cached_path(
             "gs://allennlp-public-models/bert-xsmall-dummy.tar.gz", extract_archive=True
         )
-        assert os.path.isdir(path)
-        meta = Meta.from_path(path + ".json")
+        assert path.is_dir()
+        meta = Meta.from_path(_meta_file_path(path))
         assert meta.extraction_dir
         assert meta.etag is not None
 
@@ -339,8 +341,8 @@ class TestCachedPathS3(BaseTestClass):
     @flaky
     def test_cache_object(self):
         path = cached_path("s3://allennlp/datasets/squad/squad-dev-v1.1.json")
-        assert os.path.isfile(path)
-        meta = Meta.from_path(path + ".json")
+        assert path.is_file()
+        meta = Meta.from_path(_meta_file_path(path))
         assert meta.etag is not None
 
 
@@ -348,10 +350,9 @@ class TestCachedPathHf(BaseTestClass):
     @flaky
     def test_cached_download_no_user_or_org(self):
         path = cached_path("hf://t5-small/config.json")
-        assert os.path.isfile(path)
-        assert pathlib.Path(os.path.dirname(path)) == self.TEST_DIR
-        assert os.path.isfile(path + ".json")
-        meta = Meta.from_path(path + ".json")
+        assert path.is_file()
+        assert path.parent == self.TEST_DIR
+        meta = Meta.from_path(_meta_file_path(path))
         assert meta.etag is not None
         assert meta.resource == "hf://t5-small/config.json"
 
@@ -360,7 +361,6 @@ class TestCachedPathHf(BaseTestClass):
         # This is the smallest snapshot I could find that is not associated with a user / org.
         model_name = "distilbert-base-german-cased"
         path = cached_path(f"hf://{model_name}")
-        assert os.path.isdir(path)
-        assert os.path.isfile(path + ".json")
-        meta = Meta.from_path(path + ".json")
+        assert path.is_dir()
+        meta = Meta.from_path(_meta_file_path(path))
         assert meta.resource == f"hf://{model_name}"

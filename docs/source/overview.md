@@ -3,8 +3,9 @@ Overview
 
 The main functionality of **cached-path** is provided by the function {func}`~cached_path.cached_path()`.
 
-```python
-from cached_path import cached_path
+```{testsetup}
+>>> from cached_path import cached_path
+>>>
 ```
 
 ## Basic usage
@@ -15,26 +16,26 @@ For example, assuming the file `README.md` exists locally, the returned by is ju
 the same path that was provided:
 
 ```python
-assert cached_path("README.md") == "README.md"
+>>> print(cached_path("README.md"))
+README.md
+>>>
 ```
 
 But for remote resources, the resource will be downloaded and cached to the cache directory:
 
 ```python
-path = cached_path("https://github.com/allenai/cached_path/blob/main/README.md")
-assert os.path.exists(path)
-assert os.path.split(path)[0] == os.path.expanduser("~/.cache/cached_path")
+>>> path = cached_path("https://github.com/allenai/cached_path/blob/main/README.md")
+>>> assert path.is_file()
+>>> from cached_path import get_cache_dir
+>>> assert path.parent == get_cache_dir()
+>>>
 ```
+
+If you were to call this again after the ETag of the resource has changed, the new version would be downloaded
+and the local path returned from `cached_path()` would point to the newly downloaded version.
 
 ```{tip}
 There are multiple ways to [change the cache directory](#overriding-the-default-cache-directory).
-```
-
-If you were to call this again after the ETag of the resource has changed, a new version will be cached:
-
-```python
-path2 = cached_path("https://github.com/allenai/cached_path/blob/main/README.md")
-assert path2 != path
 ```
 
 ## Supported URL schemes
@@ -50,11 +51,12 @@ You can also overwrite how any of these schemes are handled or add clients for n
 {func}`~cached_path.cached_path()` will safely extract archives (`.tar.gz` or `.zip` files) if you set the `extract_archive` argument to `True`:
 
 ```python
-cached_archive = cached_path(
-    "https://github.com/allenai/cached_path/releases/download/v0.1.0/cached_path-0.1.0.tar.gz",
-    extract_archive=True,
-)
-assert os.path.isdir(cached_archive)
+>>> cached_archive = cached_path(
+...    "https://github.com/allenai/cached_path/releases/download/v0.1.0/cached_path-0.1.0.tar.gz",
+...    extract_archive=True,
+... )
+>>> assert cached_archive.is_dir()
+>>>
 ```
 
 This works for both local and remote resources.
@@ -63,11 +65,12 @@ You can also automatically get the path to a certain file or directory within an
 the relative path to the file within the archive to the string given to {func}`~cached_path.cached_path()`:
 
 ```python
-path = cached_path(
-    "https://github.com/allenai/cached_path/releases/download/v0.1.0/cached_path-0.1.0.tar.gz!README.md",
-    extract_archive=True,
-)
-assert os.path.isfile(path)
+>>> path = cached_path(
+...     "https://github.com/allenai/cached_path/releases/download/v0.1.0/cached_path-0.1.0.tar.gz!cached_path-0.1.0/README.md",
+...     extract_archive=True,
+... )
+>>> assert path.is_file()
+>>>
 ```
 
 ## Overriding the default cache directory

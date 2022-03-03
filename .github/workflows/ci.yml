@@ -40,7 +40,7 @@ jobs:
 
           - name: Test
             run: |
-              pytest -v --color=yes tests/
+              pytest -v --color=yes --doctest-modules --doctest-glob='*.md'
 
           - name: Build
             run: |

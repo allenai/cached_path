@@ -10,10 +10,10 @@ and ``hf`` for HuggingFace Hub. See :func:`cached_path.cached_path()` for more d
 You can also extend **cached-path** to support other schemes with :func:`add_scheme_client()`.
 """
 
-from cached_path._cached_path import cached_path
-from cached_path.common import file_friendly_logging, get_cache_dir, set_cache_dir
-from cached_path.schemes import SchemeClient, add_scheme_client
-from cached_path.util import (
+from ._cached_path import cached_path
+from .common import file_friendly_logging, get_cache_dir, set_cache_dir
+from .schemes import SchemeClient, add_scheme_client
+from .util import (
     check_tarfile,
     filename_to_url,
     find_latest_cached,
