@@ -12,7 +12,7 @@ The main functionality of **cached-path** is provided by the function {func}`~ca
 
 {func}`~cached_path.cached_path()` has a single positional argument that is either the path to a local file or the URL of a remote resource.
 
-For example, assuming the file `README.md` exists locally, the returned by is just
+For example, assuming the file `README.md` exists locally, the returned {class}`~pathlib.Path` is just
 the same path that was provided:
 
 ```python
