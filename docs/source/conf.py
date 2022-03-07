@@ -20,7 +20,7 @@ from cached_path.version import VERSION, VERSION_SHORT  # noqa: E402
 # -- Project information -----------------------------------------------------
 
 project = "cached-path"
-copyright = "2021, Allen Institute for Artificial Intelligence"
+copyright = "2022, Allen Institute for Artificial Intelligence"
 author = "Allen Institute for Artificial Intelligence"
 version = VERSION_SHORT
 release = VERSION
