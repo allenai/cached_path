@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Fixed bug where `cached_path()` would fail to find local files with the home shortcut "~/" in their path.
+
 ## [v1.1.0](https://github.com/allenai/cached_path/releases/tag/v1.1.0) - 2022-03-03
 
 ### Changed

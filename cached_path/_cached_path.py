@@ -159,7 +159,7 @@ def cached_path(
             extraction_path = file_path.parent / (file_path.name + "-extracted")
 
     else:
-        url_or_filename = Path(url_or_filename)
+        url_or_filename = Path(url_or_filename).expanduser()
 
         if url_or_filename.exists():
             # File, and it exists.
