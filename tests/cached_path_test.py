@@ -1,4 +1,5 @@
 import shutil
+import tempfile
 import time
 from collections import Counter
 from pathlib import Path
@@ -230,6 +231,16 @@ class TestCachedPathHttp(BaseTestClass):
 
         with pytest.raises(RecoverableServerError):
             cached_path(url_502)
+
+
+class TestCachedPathLocalFiles(BaseTestClass):
+    def test_path_with_home_shortcut(self):
+        with tempfile.NamedTemporaryFile(dir=Path.home()) as tmp_file:
+            full_path = Path(tmp_file.name)
+            fname = full_path.name
+            short_path = f"~/{fname}"
+            assert cached_path(short_path) == full_path
+            assert cached_path(Path(short_path)) == full_path
 
 
 class TestCachedPathWithArchive(BaseTestClass):
