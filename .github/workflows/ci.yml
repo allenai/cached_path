@@ -30,30 +30,37 @@ jobs:
       matrix:
         python: ['3.7', '3.8', '3.9', '3.10']
         task:
-          - name: Lint
-            run: |
-              flake8 .
-
-          - name: Type check
-            run: |
-              mypy .
-
           - name: Test
             run: |
               pytest -v --color=yes --doctest-modules --doctest-glob='*.md'
 
-          - name: Build
-            run: |
-              python setup.py check
-              python setup.py bdist_wheel sdist
+        include:
+          - python: '3.10'
+            task:
+              name: Lint
+              run: flake8 .
 
-          - name: Style
-            run: |
-              black --check .
+          - python: '3.10'
+            task:
+              name: Type check
+              run: mypy .
 
-          - name: Docs
-            run: |
-              cd docs && make html
+          - python: '3.10'
+            task:
+              name: Build
+              run: |
+                python setup.py check
+                python setup.py bdist_wheel sdist
+
+          - python: '3.10'
+            task:
+              name: Style
+              run: black --check .
+
+          - python: '3.10'
+            task:
+              name: Docs
+              run: cd docs && make html
 
     steps:
       - uses: actions/checkout@v2
