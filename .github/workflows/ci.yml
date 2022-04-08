@@ -18,7 +18,7 @@ env:
   # Change this to invalidate existing cache.
   CACHE_PREFIX: v0
   PYTHON_PATH: ./
-  DEFAULT_PYTHON: '3.8'
+  DEFAULT_PYTHON: '3.10'
 
 jobs:
   checks:
