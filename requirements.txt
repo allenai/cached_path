@@ -1,5 +1,5 @@
 requests>=2.0,<3.0
-tqdm>=4.62,<4.64
+tqdm>=4.62,<4.65
 filelock>=3.4,<3.7
 boto3>=1.0,<2.0
 google-cloud-storage>=1.0,<3.0
