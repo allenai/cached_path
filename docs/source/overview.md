@@ -4,7 +4,8 @@ Overview
 The main functionality of **cached-path** is provided by the function {func}`~cached_path.cached_path()`.
 
 ```{testsetup}
->>> from cached_path import cached_path
+>>> from cached_path import cached_path, set_cache_dir
+>>> set_cache_dir(cache_dir)
 >>>
 ```
 

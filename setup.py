@@ -56,6 +56,8 @@ setup(
             "tests",
             "test_fixtures",
             "test_fixtures.*",
+            "conftest",
+            "*.conftest",
         ]
     ),
     install_requires=read_requirements("requirements.txt"),
