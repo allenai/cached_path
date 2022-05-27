@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Switched to `rich` for progress displays, removed dependency on `tqdm`.
 
+### Removed
+
+- Removed `file_friendly_logging()` function.
+
 ## [v1.1.2](https://github.com/allenai/cached_path/releases/tag/v1.1.2) - 2022-04-08
 
 ## [v1.1.1](https://github.com/allenai/cached_path/releases/tag/v1.1.1) - 2022-03-25
