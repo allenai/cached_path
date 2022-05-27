@@ -107,7 +107,8 @@ def cached_path(
 
     progress :
         A custom progress display to use. If not set and ``quiet=False``, a default display
-        from :func:`~cached_path.get_unsized_write_progress()` will be used.
+        from :func:`~cached_path.get_sized_download_progress()` will be used if the size is known,
+        otherwise :func:`~cached_path.get_unsized_download_progress()` will be used.
 
     Returns
     -------
@@ -325,18 +326,17 @@ def get_from_cache(
         if os.path.exists(cache_path):
             logger.info("cache of %s is up-to-date", url)
         else:
+            size = client.get_size()
             with CacheFile(cache_path) as cache_file:
                 logger.info("%s not found in cache, downloading to %s", url, cache_path)
-                from .progress import (
-                    BufferedWriterWithProgress,
-                    get_unsized_write_progress,
-                )
 
-                progress = progress or get_unsized_write_progress(quiet=quiet)
+                from .progress import BufferedWriterWithProgress, get_download_progress
+
+                progress = progress or get_download_progress(size, quiet=quiet)
 
                 with progress:
                     display_url = url if len(url) <= 70 else f"{url[:69]}\N{horizontal ellipsis}"
-                    task_id = progress.add_task(f"Downloading [cyan i]{display_url}[/]")
+                    task_id = progress.add_task(f"Downloading [cyan i]{display_url}[/]", total=size)
                     writer_with_progress = BufferedWriterWithProgress(cache_file, progress, task_id)
                     client.get_resource(writer_with_progress)
 

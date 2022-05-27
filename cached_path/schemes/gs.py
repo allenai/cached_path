@@ -20,15 +20,26 @@ class GsClient(SchemeClient):
     def __init__(self, resource: str) -> None:
         super().__init__(resource)
         self.blob = GsClient.get_gcs_blob(resource)
+        self._loaded = False
+
+    def load(self):
+        if not self._loaded:
+            try:
+                self.blob.reload()
+                self._loaded = True
+            except NotFound:
+                raise FileNotFoundError(self.resource)
 
     def get_etag(self) -> Optional[str]:
-        try:
-            self.blob.reload()
-        except NotFound:
-            raise FileNotFoundError(self.resource)
+        self.load()
         return self.blob.etag or self.blob.md5_hash
 
+    def get_size(self) -> Optional[int]:
+        self.load()
+        return self.blob.size
+
     def get_resource(self, temp_file: io.BufferedWriter) -> None:
+        self.load()
         self.blob.download_to_file(temp_file, checksum="md5", retry=DEFAULT_RETRY)
 
     @staticmethod

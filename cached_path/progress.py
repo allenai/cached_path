@@ -1,6 +1,9 @@
 import io
+from typing import Optional
 
 from rich.progress import (
+    BarColumn,
+    DownloadColumn,
     FileSizeColumn,
     Progress,
     SpinnerColumn,
@@ -24,11 +27,30 @@ class BufferedWriterWithProgress(io.BufferedWriter):
         return n
 
 
-def get_unsized_write_progress(quiet: bool = False) -> Progress:
+def get_unsized_download_progress(quiet: bool = False) -> Progress:
     return Progress(
         "[progress.description]{task.description}",
         SpinnerColumn(),
         TimeElapsedColumn(),
         FileSizeColumn(),
         disable=quiet,
+    )
+
+
+def get_sized_download_progress(quiet: bool = False) -> Progress:
+    return Progress(
+        "[progress.description]{task.description}",
+        BarColumn(),
+        "[progress.percentage]{task.percentage:>3.0f}%",
+        TimeElapsedColumn(),
+        DownloadColumn(),
+        disable=quiet,
+    )
+
+
+def get_download_progress(size: Optional[int], quiet: bool = False) -> Progress:
+    return (
+        get_sized_download_progress(quiet=quiet)
+        if size is not None
+        else get_unsized_download_progress(quiet=quiet)
     )

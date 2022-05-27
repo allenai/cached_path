@@ -67,6 +67,33 @@ class SchemeClient:
         """
         raise NotImplementedError
 
+    def get_size(self) -> Optional[int]:
+        """
+        Get the size of the resource in bytes (if known).
+
+        Returns
+        -------
+        ``Optional[int]``
+            The size (in bytes).
+
+        Raises
+        ------
+        ``FileNotFoundError``
+            If the resource doesn't exist.
+
+        ``Recoverable error``
+            Any error type defined in ``SchemeClient.recoverable_errors`` will
+            be treated as a recoverable error.
+
+            This means that when of these is caught by ``cached_path()``, the size
+            will be ignored.
+
+        ``Other errors``
+            Any other error type can be raised. These errors will be treated non-recoverable
+            and will be propogated immediately by ``cached_path()``.
+        """
+        return None
+
     def get_resource(self, temp_file: io.BufferedWriter) -> None:
         """
         Download the resource to the given temporary file.

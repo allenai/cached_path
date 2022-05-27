@@ -30,18 +30,29 @@ class S3Client(SchemeClient):
         else:
             s3_resource = session.resource("s3")
         self.s3_object = s3_resource.Object(bucket_name, s3_path)
+        self._loaded = False
+
+    def load(self):
+        if not self._loaded:
+            try:
+                self.s3_object.load()
+                self._loaded = True
+            except botocore.exceptions.ClientError as exc:
+                if int(exc.response["Error"]["Code"]) == 404:
+                    raise FileNotFoundError("file {} not found".format(self.resource))
+                else:
+                    raise
 
     def get_etag(self) -> Optional[str]:
-        try:
-            self.s3_object.load()
-        except botocore.exceptions.ClientError as exc:
-            if int(exc.response["Error"]["Code"]) == 404:
-                raise FileNotFoundError("file {} not found".format(self.resource))
-            else:
-                raise
+        self.load()
         return self.s3_object.e_tag
 
+    def get_size(self) -> Optional[int]:
+        self.load()
+        return self.s3_object.content_length
+
     def get_resource(self, temp_file: io.BufferedWriter) -> None:
+        self.load()
         self.s3_object.download_fileobj(temp_file)
 
     @staticmethod

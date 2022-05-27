@@ -12,7 +12,7 @@ using {func}`asyncio.to_thread()`. For example:
 
 ```{testsetup}
 >>> import sys, pytest, asyncio
->>> from cached_path import cached_path, get_unsized_write_progress
+>>> from cached_path import cached_path, get_unsized_download_progress
 >>> if sys.version_info < (3, 9):
 ...     pytest.skip("This doctest requires Python >= 3.9")
 >>>
@@ -21,7 +21,7 @@ using {func}`asyncio.to_thread()`. For example:
 ```python
 >>> async def main():
 ...     print("Downloading files...")
-...     progress = get_unsized_write_progress()
+...     progress = get_unsized_download_progress()
 ...     await asyncio.gather(
 ...         asyncio.to_thread(
 ...             cached_path,

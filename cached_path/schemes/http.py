@@ -35,11 +35,27 @@ class HttpClient(SchemeClient):
     scheme = ("http", "https")
     recoverable_errors = SchemeClient.recoverable_errors + (RecoverableServerError,)
 
+    def __init__(self, resource: str) -> None:
+        super().__init__(resource)
+        self._head_response = None
+
+    @property
+    def head_response(self):
+        if self._head_response is None:
+            with session_with_backoff() as session:
+                response = session.head(self.resource, allow_redirects=True)
+            self.validate_response(response)
+            self._head_response = response
+            return self._head_response
+        else:
+            return self._head_response
+
     def get_etag(self) -> Optional[str]:
-        with session_with_backoff() as session:
-            response = session.head(self.resource, allow_redirects=True)
-        self.validate_response(response)
-        return response.headers.get("ETag")
+        return self.head_response.headers.get("ETag")
+
+    def get_size(self) -> Optional[int]:
+        content_length = self.head_response.headers.get("Content-Length")
+        return None if content_length is None else int(content_length)
 
     def get_resource(self, temp_file: io.BufferedWriter) -> None:
         with session_with_backoff() as session:
