@@ -12,7 +12,7 @@ You can also extend **cached-path** to support other schemes with :func:`add_sch
 
 from ._cached_path import cached_path
 from .common import get_cache_dir, set_cache_dir
-from .progress import get_sized_download_progress, get_unsized_download_progress
+from .progress import get_download_progress
 from .schemes import SchemeClient, add_scheme_client
 from .util import (
     check_tarfile,

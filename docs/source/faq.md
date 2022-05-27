@@ -12,7 +12,7 @@ using {func}`asyncio.to_thread()`. For example:
 
 ```{testsetup}
 >>> import sys, pytest, asyncio
->>> from cached_path import cached_path, get_unsized_download_progress
+>>> from cached_path import cached_path, get_download_progress
 >>> if sys.version_info < (3, 9):
 ...     pytest.skip("This doctest requires Python >= 3.9")
 >>>
@@ -21,24 +21,24 @@ using {func}`asyncio.to_thread()`. For example:
 ```python
 >>> async def main():
 ...     print("Downloading files...")
-...     progress = get_unsized_download_progress()
-...     await asyncio.gather(
-...         asyncio.to_thread(
-...             cached_path,
-...             "https://github.com/allenai/cached_path/blob/main/README.md",
-...             progress=progress,
-...         ),
-...         asyncio.to_thread(
-...             cached_path,
-...             "https://github.com/allenai/cached_path/blob/main/setup.py",
-...             progress=progress,
-...         ),
-...         asyncio.to_thread(
-...             cached_path,
-...             "https://github.com/allenai/cached_path/blob/main/requirements.txt",
-...             progress=progress,
-...         ),
-...     )
+...     with get_download_progress() as progress:
+...         await asyncio.gather(
+...             asyncio.to_thread(
+...                 cached_path,
+...                 "https://github.com/allenai/cached_path/blob/main/README.md",
+...                 progress=progress,
+...             ),
+...             asyncio.to_thread(
+...                 cached_path,
+...                 "https://github.com/allenai/cached_path/blob/main/setup.py",
+...                 progress=progress,
+...             ),
+...             asyncio.to_thread(
+...                 cached_path,
+...                 "https://github.com/allenai/cached_path/blob/main/requirements.txt",
+...                 progress=progress,
+...             ),
+...         )
 ...     print("Finished all downloads")
 ...
 >>> asyncio.run(main())

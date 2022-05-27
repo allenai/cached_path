@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added `quiet` parameter to `cached_path()` for turning off progress displays, and `progress` parameter for customizing displays.
+- Added `SchemeClient.get_size()` method.
 
 ### Changed
 

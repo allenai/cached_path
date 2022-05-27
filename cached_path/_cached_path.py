@@ -107,8 +107,7 @@ def cached_path(
 
     progress :
         A custom progress display to use. If not set and ``quiet=False``, a default display
-        from :func:`~cached_path.get_sized_download_progress()` will be used if the size is known,
-        otherwise :func:`~cached_path.get_unsized_download_progress()` will be used.
+        from :func:`~cached_path.get_download_progress()` will be used.
 
     Returns
     -------
@@ -332,13 +331,22 @@ def get_from_cache(
 
                 from .progress import BufferedWriterWithProgress, get_download_progress
 
-                progress = progress or get_download_progress(size, quiet=quiet)
-
-                with progress:
-                    display_url = url if len(url) <= 70 else f"{url[:69]}\N{horizontal ellipsis}"
+                def download_with_progress():
+                    display_url = url if len(url) <= 60 else f"{url[:59]}\N{horizontal ellipsis}"
                     task_id = progress.add_task(f"Downloading [cyan i]{display_url}[/]", total=size)
                     writer_with_progress = BufferedWriterWithProgress(cache_file, progress, task_id)
                     client.get_resource(writer_with_progress)
+                    progress.update(
+                        task_id,
+                        total=writer_with_progress.total_written,
+                        completed=writer_with_progress.total_written,
+                    )
+
+                if progress:
+                    download_with_progress()
+                else:
+                    with get_download_progress(quiet=quiet):
+                        download_with_progress()
 
             logger.debug("creating metadata file for %s", cache_path)
             meta = Meta.new(

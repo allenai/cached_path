@@ -15,8 +15,7 @@ Functions
 .. autofunction:: cached_path.filename_to_url
 .. autofunction:: cached_path.find_latest_cached
 .. autofunction:: cached_path.check_tarfile
-.. autofunction:: cached_path.get_sized_download_progress
-.. autofunction:: cached_path.get_unsized_download_progress
+.. autofunction:: cached_path.get_download_progress
 
 Classes
 -------
