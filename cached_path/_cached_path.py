@@ -345,7 +345,7 @@ def get_from_cache(
                 if progress:
                     download_with_progress()
                 else:
-                    with get_download_progress(quiet=quiet):
+                    with get_download_progress(quiet=quiet) as progress:
                         download_with_progress()
 
             logger.debug("creating metadata file for %s", cache_path)
