@@ -336,7 +336,7 @@ def get_from_cache(
 
                 with progress:
                     display_url = url if len(url) <= 70 else f"{url[:69]}\N{horizontal ellipsis}"
-                    task_id = progress.add_task(f"[cyan i]{display_url}[/]")
+                    task_id = progress.add_task(f"Downloading [cyan i]{display_url}[/]")
                     writer_with_progress = BufferedWriterWithProgress(cache_file, progress, task_id)
                     client.get_resource(writer_with_progress)
 
