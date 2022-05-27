@@ -27,7 +27,7 @@ def add_scheme_client(client: Type[SchemeClient]) -> None:
 
 
 for client in (HttpClient, S3Client, GsClient):
-    add_scheme_client(client)
+    add_scheme_client(client)  # type: ignore
 
 
 def get_scheme_client(resource: str) -> SchemeClient:
