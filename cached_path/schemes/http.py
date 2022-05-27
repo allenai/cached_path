@@ -1,11 +1,11 @@
-from typing import IO, Optional
+import io
+from typing import Optional
 
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
 from cached_path.schemes.scheme_client import SchemeClient
-from cached_path.tqdm import Tqdm
 
 RECOVERABLE_SERVER_ERROR_CODES = (502, 503, 504)
 
@@ -41,20 +41,13 @@ class HttpClient(SchemeClient):
         self.validate_response(response)
         return response.headers.get("ETag")
 
-    def get_resource(self, temp_file: IO) -> None:
+    def get_resource(self, temp_file: io.BufferedWriter) -> None:
         with session_with_backoff() as session:
             response = session.get(self.resource, stream=True)
             self.validate_response(response)
-            content_length = response.headers.get("Content-Length")
-            total = int(content_length) if content_length is not None else None
-            progress = Tqdm.tqdm(
-                unit="iB", unit_scale=True, unit_divisor=1024, total=total, desc="downloading"
-            )
             for chunk in response.iter_content(chunk_size=1024):
                 if chunk:  # filter out keep-alive new chunks
-                    progress.update(len(chunk))
                     temp_file.write(chunk)
-            progress.close()
 
     def validate_response(self, response):
         if response.status_code == 404:

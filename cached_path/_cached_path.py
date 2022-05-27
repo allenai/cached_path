@@ -4,7 +4,7 @@ import shutil
 import tarfile
 import tempfile
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import TYPE_CHECKING, Optional, Tuple
 from urllib.parse import urlparse
 from zipfile import ZipFile, is_zipfile
 
@@ -21,6 +21,9 @@ from .util import (
     resource_to_filename,
 )
 
+if TYPE_CHECKING:
+    from rich.progress import Progress
+
 logger = logging.getLogger("cached_path")
 
 
@@ -29,6 +32,8 @@ def cached_path(
     cache_dir: Optional[PathOrStr] = None,
     extract_archive: bool = False,
     force_extract: bool = False,
+    quiet: bool = False,
+    progress: Optional["Progress"] = None,
 ) -> Path:
     """
     Given something that might be a URL or local path, determine which.
@@ -97,6 +102,13 @@ def cached_path(
             Use this flag with caution! This can lead to race conditions if used
             from multiple processes on the same file.
 
+    quiet :
+        If ``True``, progress displays won't be printed.
+
+    progress :
+        A custom progress display to use. If not set and ``quiet=False``, a default display
+        from :func:`~cached_path.get_unsized_write_progress()` will be used.
+
     Returns
     -------
     :class:`pathlib.Path`
@@ -133,7 +145,14 @@ def cached_path(
         file_name = url_or_filename[exclamation_index + 1 :]
 
         # Call 'cached_path' recursively now to get the local path to the archive itself.
-        cached_archive_path = cached_path(archive_path, cache_dir, True, force_extract)
+        cached_archive_path = cached_path(
+            archive_path,
+            cache_dir,
+            extract_archive=True,
+            force_extract=force_extract,
+            quiet=quiet,
+            progress=progress,
+        )
         if not cached_archive_path.is_dir():
             raise ValueError(
                 f"{url_or_filename} uses the ! syntax, but does not specify an archive file."
@@ -151,7 +170,7 @@ def cached_path(
 
     if parsed.scheme in get_supported_schemes():
         # URL, so get it from the cache (downloading if necessary)
-        file_path, etag = get_from_cache(url_or_filename, cache_dir)
+        file_path, etag = get_from_cache(url_or_filename, cache_dir, quiet=quiet, progress=progress)
 
         if extract_archive and (is_zipfile(file_path) or tarfile.is_tarfile(file_path)):
             # This is the path the file should be extracted to.
@@ -243,7 +262,12 @@ def cached_path(
     return file_path
 
 
-def get_from_cache(url: str, cache_dir: Optional[PathOrStr] = None) -> Tuple[Path, Optional[str]]:
+def get_from_cache(
+    url: str,
+    cache_dir: Optional[PathOrStr] = None,
+    quiet: bool = False,
+    progress: Optional["Progress"] = None,
+) -> Tuple[Path, Optional[str]]:
     """
     Given a URL, look for the corresponding dataset in the local cache.
     If it's not there, download it. Then return the path to the cached file and the ETag.
@@ -303,7 +327,18 @@ def get_from_cache(url: str, cache_dir: Optional[PathOrStr] = None) -> Tuple[Pat
         else:
             with CacheFile(cache_path) as cache_file:
                 logger.info("%s not found in cache, downloading to %s", url, cache_path)
-                client.get_resource(cache_file)
+                from .progress import (
+                    BufferedWriterWithProgress,
+                    get_unsized_write_progress,
+                )
+
+                progress = progress or get_unsized_write_progress(quiet=quiet)
+
+                with progress:
+                    display_url = url if len(url) <= 70 else f"{url[:69]}\N{horizontal ellipsis}"
+                    task_id = progress.add_task(f"[cyan i]{display_url}[/]")
+                    writer_with_progress = BufferedWriterWithProgress(cache_file, progress, task_id)
+                    client.get_resource(writer_with_progress)
 
             logger.debug("creating metadata file for %s", cache_path)
             meta = Meta.new(

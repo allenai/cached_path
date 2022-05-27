@@ -1,4 +1,5 @@
-from typing import IO, ClassVar, Optional, Tuple, Type, Union
+import io
+from typing import ClassVar, Optional, Tuple, Type, Union
 
 import requests
 
@@ -66,7 +67,7 @@ class SchemeClient:
         """
         raise NotImplementedError
 
-    def get_resource(self, temp_file: IO) -> None:
+    def get_resource(self, temp_file: io.BufferedWriter) -> None:
         """
         Download the resource to the given temporary file.
 

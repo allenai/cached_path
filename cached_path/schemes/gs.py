@@ -2,7 +2,8 @@
 Google Cloud Storage.
 """
 
-from typing import IO, Optional, Tuple
+import io
+from typing import Optional, Tuple
 
 from google.api_core.exceptions import NotFound
 from google.auth.exceptions import DefaultCredentialsError
@@ -11,7 +12,6 @@ from google.cloud.storage.retry import DEFAULT_RETRY
 
 from cached_path.common import _split_cloud_path
 from cached_path.schemes.scheme_client import SchemeClient
-from cached_path.tqdm import Tqdm
 
 
 class GsClient(SchemeClient):
@@ -28,17 +28,8 @@ class GsClient(SchemeClient):
             raise FileNotFoundError(self.resource)
         return self.blob.etag or self.blob.md5_hash
 
-    def get_resource(self, temp_file: IO) -> None:
-        with Tqdm.wrapattr(
-            temp_file,
-            "write",
-            unit="iB",
-            unit_scale=True,
-            unit_divisor=1024,
-            total=self.blob.size,
-            desc="downloading",
-        ) as file_obj:
-            self.blob.download_to_file(file_obj, checksum="md5", retry=DEFAULT_RETRY)
+    def get_resource(self, temp_file: io.BufferedWriter) -> None:
+        self.blob.download_to_file(temp_file, checksum="md5", retry=DEFAULT_RETRY)
 
     @staticmethod
     def split_gcs_path(resource: str) -> Tuple[str, str]:

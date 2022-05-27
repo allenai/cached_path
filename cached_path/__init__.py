@@ -11,7 +11,8 @@ You can also extend **cached-path** to support other schemes with :func:`add_sch
 """
 
 from ._cached_path import cached_path
-from .common import file_friendly_logging, get_cache_dir, set_cache_dir
+from .common import get_cache_dir, set_cache_dir
+from .progress import get_unsized_write_progress
 from .schemes import SchemeClient, add_scheme_client
 from .util import (
     check_tarfile,

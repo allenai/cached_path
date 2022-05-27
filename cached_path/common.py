@@ -14,17 +14,6 @@ The default global cache directory.
 """
 
 
-def _parse_bool(value: Union[bool, str]) -> bool:
-    if isinstance(value, bool):
-        return value
-    if value in {"1", "true", "True", "TRUE"}:
-        return True
-    return False
-
-
-FILE_FRIENDLY_LOGGING: bool = _parse_bool(os.environ.get("FILE_FRIENDLY_LOGGING", False))
-
-
 def _split_cloud_path(url: str, provider: str) -> Tuple[str, str]:
     """Split a full s3 path into the bucket name and path."""
     parsed = urlparse(url)
@@ -51,13 +40,3 @@ def get_cache_dir() -> Path:
     Get the global default cache directory.
     """
     return Path(CACHE_DIRECTORY)
-
-
-def file_friendly_logging(on: bool = True) -> None:
-    """
-    Turn on (or off) file-friendly logging globally.
-
-    You can also control this through the environment variable `FILE_FRIENDLY_LOGGING`.
-    """
-    global FILE_FRIENDLY_LOGGING
-    FILE_FRIENDLY_LOGGING = on
