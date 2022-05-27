@@ -331,7 +331,13 @@ def get_from_cache(
 
                 from .progress import BufferedWriterWithProgress, get_download_progress
 
-                def download_with_progress():
+                start_and_cleanup = progress is None
+                progress = progress or get_download_progress(quiet=quiet)
+
+                if start_and_cleanup:
+                    progress.start()
+
+                try:
                     display_url = url if len(url) <= 50 else f"{url[:49]}\N{horizontal ellipsis}"
                     task_id = progress.add_task(f"Downloading [cyan i]{display_url}[/]", total=size)
                     writer_with_progress = BufferedWriterWithProgress(cache_file, progress, task_id)
@@ -341,12 +347,9 @@ def get_from_cache(
                         total=writer_with_progress.total_written,
                         completed=writer_with_progress.total_written,
                     )
-
-                if progress:
-                    download_with_progress()
-                else:
-                    with get_download_progress(quiet=quiet) as progress:
-                        download_with_progress()
+                finally:
+                    if start_and_cleanup:
+                        progress.stop()
 
             logger.debug("creating metadata file for %s", cache_path)
             meta = Meta.new(
