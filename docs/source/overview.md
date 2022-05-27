@@ -24,7 +24,7 @@ README.md
 But for remote resources, the resource will be downloaded and cached to the cache directory:
 
 ```python
->>> path = cached_path("https://github.com/allenai/cached_path/blob/main/README.md")
+>>> path = cached_path("https://github.com/allenai/cached_path/blob/main/README.md", quiet=True)
 >>> assert path.is_file()
 >>> from cached_path import get_cache_dir
 >>> assert path.parent == get_cache_dir()
@@ -54,6 +54,7 @@ You can also overwrite how any of these schemes are handled or add clients for n
 >>> cached_archive = cached_path(
 ...    "https://github.com/allenai/cached_path/releases/download/v0.1.0/cached_path-0.1.0.tar.gz",
 ...    extract_archive=True,
+...    quiet=True,
 ... )
 >>> assert cached_archive.is_dir()
 >>>
@@ -68,6 +69,7 @@ the relative path to the file within the archive to the string given to {func}`~
 >>> path = cached_path(
 ...     "https://github.com/allenai/cached_path/releases/download/v0.1.0/cached_path-0.1.0.tar.gz!cached_path-0.1.0/README.md",
 ...     extract_archive=True,
+...     quiet=True,
 ... )
 >>> assert path.is_file()
 >>>

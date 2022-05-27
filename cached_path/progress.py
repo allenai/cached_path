@@ -12,12 +12,13 @@ from rich.progress import (
 class BufferedWriterWithProgress(io.BufferedWriter):
     def __init__(self, writer: io.BufferedWriter, progress: Progress, task_id: TaskID):
         super().__init__(writer.raw)
+        self.writer = writer
         self.progress = progress
         self.task_id = task_id
         self.total_written = 0
 
     def write(self, b) -> int:
-        n = super().write(b)
+        n = self.writer.write(b)
         self.total_written += n
         self.progress.advance(self.task_id, n)
         return n

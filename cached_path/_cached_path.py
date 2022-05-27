@@ -147,7 +147,7 @@ def cached_path(
         # Call 'cached_path' recursively now to get the local path to the archive itself.
         cached_archive_path = cached_path(
             archive_path,
-            cache_dir,
+            cache_dir=cache_dir,
             extract_archive=True,
             force_extract=force_extract,
             quiet=quiet,
