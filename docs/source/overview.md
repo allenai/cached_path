@@ -4,7 +4,8 @@ Overview
 The main functionality of **cached-path** is provided by the function {func}`~cached_path.cached_path()`.
 
 ```{testsetup}
->>> from cached_path import cached_path
+>>> from cached_path import cached_path, set_cache_dir
+>>> set_cache_dir(cache_dir)
 >>>
 ```
 
@@ -25,6 +26,7 @@ But for remote resources, the resource will be downloaded and cached to the cach
 
 ```python
 >>> path = cached_path("https://github.com/allenai/cached_path/blob/main/README.md")
+Downloading...
 >>> assert path.is_file()
 >>> from cached_path import get_cache_dir
 >>> assert path.parent == get_cache_dir()
@@ -55,6 +57,7 @@ You can also overwrite how any of these schemes are handled or add clients for n
 ...    "https://github.com/allenai/cached_path/releases/download/v0.1.0/cached_path-0.1.0.tar.gz",
 ...    extract_archive=True,
 ... )
+Downloading...
 >>> assert cached_archive.is_dir()
 >>>
 ```

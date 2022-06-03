@@ -1,4 +1,6 @@
-from typing import IO, ClassVar, Optional, Tuple, Type, Union
+import io
+from abc import abstractmethod
+from typing import ClassVar, Optional, Tuple, Type, Union
 
 import requests
 
@@ -35,6 +37,7 @@ class SchemeClient:
     def __init__(self, resource: str) -> None:
         self.resource = resource
 
+    @abstractmethod
     def get_etag(self) -> Optional[str]:
         """
         Get the Etag or an equivalent version identifier associated with the resource.
@@ -66,7 +69,36 @@ class SchemeClient:
         """
         raise NotImplementedError
 
-    def get_resource(self, temp_file: IO) -> None:
+    @abstractmethod
+    def get_size(self) -> Optional[int]:
+        """
+        Get the size of the resource in bytes (if known).
+
+        Returns
+        -------
+        ``Optional[int]``
+            The size (in bytes).
+
+        Raises
+        ------
+        ``FileNotFoundError``
+            If the resource doesn't exist.
+
+        ``Recoverable error``
+            Any error type defined in ``SchemeClient.recoverable_errors`` will
+            be treated as a recoverable error.
+
+            This means that when of these is caught by ``cached_path()``, the size
+            will be ignored.
+
+        ``Other errors``
+            Any other error type can be raised. These errors will be treated non-recoverable
+            and will be propogated immediately by ``cached_path()``.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_resource(self, temp_file: io.BufferedWriter) -> None:
         """
         Download the resource to the given temporary file.
 

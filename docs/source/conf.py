@@ -41,6 +41,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.doctest",
     "sphinx_copybutton",
+    "sphinx_autodoc_typehints",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -53,10 +54,18 @@ exclude_patterns = ["_build"]
 
 source_suffix = [".rst", ".md"]
 
-intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "rich": ("https://rich.readthedocs.io/en/latest/", None),
+}
 
 # Tell myst-parser to assign header anchors for h1-h3.
 myst_heading_anchors = 4
+
+typehints_defaults = "comma"
+
+copybutton_prompt_text = r">>> |\.\.\. "
+copybutton_prompt_is_regexp = True
 
 
 # -- Options for HTML output -------------------------------------------------

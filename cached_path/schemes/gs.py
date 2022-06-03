@@ -2,7 +2,8 @@
 Google Cloud Storage.
 """
 
-from typing import IO, Optional, Tuple
+import io
+from typing import Optional, Tuple
 
 from google.api_core.exceptions import NotFound
 from google.auth.exceptions import DefaultCredentialsError
@@ -11,7 +12,6 @@ from google.cloud.storage.retry import DEFAULT_RETRY
 
 from cached_path.common import _split_cloud_path
 from cached_path.schemes.scheme_client import SchemeClient
-from cached_path.tqdm import Tqdm
 
 
 class GsClient(SchemeClient):
@@ -20,25 +20,27 @@ class GsClient(SchemeClient):
     def __init__(self, resource: str) -> None:
         super().__init__(resource)
         self.blob = GsClient.get_gcs_blob(resource)
+        self._loaded = False
+
+    def load(self):
+        if not self._loaded:
+            try:
+                self.blob.reload()
+                self._loaded = True
+            except NotFound:
+                raise FileNotFoundError(self.resource)
 
     def get_etag(self) -> Optional[str]:
-        try:
-            self.blob.reload()
-        except NotFound:
-            raise FileNotFoundError(self.resource)
+        self.load()
         return self.blob.etag or self.blob.md5_hash
 
-    def get_resource(self, temp_file: IO) -> None:
-        with Tqdm.wrapattr(
-            temp_file,
-            "write",
-            unit="iB",
-            unit_scale=True,
-            unit_divisor=1024,
-            total=self.blob.size,
-            desc="downloading",
-        ) as file_obj:
-            self.blob.download_to_file(file_obj, checksum="md5", retry=DEFAULT_RETRY)
+    def get_size(self) -> Optional[int]:
+        self.load()
+        return self.blob.size
+
+    def get_resource(self, temp_file: io.BufferedWriter) -> None:
+        self.load()
+        self.blob.download_to_file(temp_file, checksum="md5", retry=DEFAULT_RETRY)
 
     @staticmethod
     def split_gcs_path(resource: str) -> Tuple[str, str]:
