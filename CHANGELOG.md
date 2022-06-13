@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.1.3](https://github.com/allenai/cached_path/releases/tag/v1.1.3) - 2022-06-13
+
 ### Added
 
 - Added `quiet` parameter to `cached_path()` for turning off progress displays, and `progress` parameter for customizing displays.
