@@ -77,12 +77,12 @@ def hf_get_from_cache(url: str, cache_dir: PathOrStr) -> Path:
         # because this could refer to either:
         #  1. the file 'yyyy' in the 'xxxx' repository, or
         #  2. the repo 'yyyy' under the user/org name 'xxxx'.
-        # We default to (1), but if we get a 404 error then we try (2).
+        # We default to (1), but if we get a 404 error or 401 error then we try (2)
         try:
             model_identifier, filename = identifier.split("/")
             return hf_hub_download(url, model_identifier, filename, cache_dir)
         except requests.exceptions.HTTPError as exc:
-            if exc.response.status_code == 404:
+            if exc.response.status_code in {401, 404}:
                 return hf_hub_download(url, identifier, None, cache_dir)
             raise
         except ValueError:
