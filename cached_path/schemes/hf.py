@@ -82,7 +82,7 @@ def hf_get_from_cache(url: str, cache_dir: PathOrStr) -> Path:
             model_identifier, filename = identifier.split("/")
             return hf_hub_download(url, model_identifier, filename, cache_dir)
         except requests.exceptions.HTTPError as exc:
-            if exc.response.status_code == 404 or exc.response.status_code == 401:
+            if exc.response.status_code in {401, 404}:
                 return hf_hub_download(url, identifier, None, cache_dir)
             raise
         except ValueError:
