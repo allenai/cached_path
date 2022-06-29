@@ -10,6 +10,11 @@ from typing import Optional
 
 import huggingface_hub as hf_hub
 import requests
+from huggingface_hub.utils import (
+    EntryNotFoundError,
+    RepositoryNotFoundError,
+    RevisionNotFoundError,
+)
 
 from cached_path.common import PathOrStr
 from cached_path.file_lock import FileLock
@@ -81,10 +86,13 @@ def hf_get_from_cache(url: str, cache_dir: PathOrStr) -> Path:
         try:
             model_identifier, filename = identifier.split("/")
             return hf_hub_download(url, model_identifier, filename, cache_dir)
+        except (RepositoryNotFoundError, RevisionNotFoundError, EntryNotFoundError):
+            return hf_hub_download(url, identifier, None, cache_dir)
         except requests.exceptions.HTTPError as exc:
-            if exc.response.status_code in {401, 404}:
+            if exc.response is not None and exc.response.status_code in {401, 404}:
                 return hf_hub_download(url, identifier, None, cache_dir)
-            raise
+            else:
+                raise
         except ValueError:
             return hf_hub_download(url, identifier, None, cache_dir)
     else:
