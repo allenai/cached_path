@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.1.5](https://github.com/allenai/cached_path/releases/tag/v1.1.5) - 2022-07-05
+
+## [v1.1.4](https://github.com/allenai/cached_path/releases/tag/v1.1.4) - 2022-06-29
+
+### Changed
+
+- Added support for latest `huggingface_hub` client library (v0.8.1), but dropped support for older versions.
+
+## [v1.1.3](https://github.com/allenai/cached_path/releases/tag/v1.1.3) - 2022-06-13
+
 ### Added
 
 - Added `quiet` parameter to `cached_path()` for turning off progress displays, and `progress` parameter for customizing displays.

@@ -375,3 +375,15 @@ class TestCachedPathHf(BaseTestClass):
         assert path.is_dir()
         meta = Meta.from_path(_meta_file_path(path))
         assert meta.resource == f"hf://{model_name}"
+
+    def test_snapshot_download_ambiguous_url(self):
+        # URLs like 'hf://xxxx/yyyy' are potentially ambiguous,
+        # because this could refer to either:
+        #  1. the file 'yyyy' in the 'xxxx' repository, or
+        #  2. the repo 'yyyy' under the user/org name 'xxxx'.
+        # We default to (1), but if we get a 404 error or 401 error then we try (2).
+        model_name = "lysandre/test-simple-tagger-tiny"
+        path = cached_path(f"hf://{model_name}")  # should resolve to option 2.
+        assert path.is_dir()
+        meta = Meta.from_path(_meta_file_path(path))
+        assert meta.resource == f"hf://{model_name}"
