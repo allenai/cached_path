@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.1.6](https://github.com/allenai/cached_path/releases/tag/v1.1.6) - 2022-09-28
+
 ### Changed
 
 - When we're exceeding the maximum number of retries, the exception object now contains a string message instead of the last unsuccessful request object.
