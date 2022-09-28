@@ -4,6 +4,7 @@ from typing import Optional
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
+from urllib3.exceptions import MaxRetryError
 
 from cached_path.schemes.scheme_client import SchemeClient
 
@@ -42,8 +43,11 @@ class HttpClient(SchemeClient):
     @property
     def head_response(self):
         if self._head_response is None:
-            with session_with_backoff() as session:
-                response = session.head(self.resource, allow_redirects=True)
+            try:
+                with session_with_backoff() as session:
+                    response = session.head(self.resource, allow_redirects=True)
+            except MaxRetryError as e:
+                raise RecoverableServerError(e.reason)
             self.validate_response(response)
             self._head_response = response
             return self._head_response
@@ -59,7 +63,10 @@ class HttpClient(SchemeClient):
 
     def get_resource(self, temp_file: io.BufferedWriter) -> None:
         with session_with_backoff() as session:
-            response = session.get(self.resource, stream=True)
+            try:
+                response = session.get(self.resource, stream=True)
+            except MaxRetryError as e:
+                raise RecoverableServerError(e.reason)
             self.validate_response(response)
             for chunk in response.iter_content(chunk_size=1024):
                 if chunk:  # filter out keep-alive new chunks
