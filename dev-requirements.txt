@@ -30,7 +30,7 @@ wheel
 responses==0.21.0
 
 # Building docs
-Sphinx==5.2.2
+Sphinx==5.2.3
 
 # Sphinx theme: https://sphinx-themes.org/sample-sites/furo/
 furo==2022.9.15
