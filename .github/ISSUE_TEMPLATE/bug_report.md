@@ -22,7 +22,7 @@ We reserve the right to close without a response bug reports which are incomplet
 - [ ] I have checked the [pull requests list](https://github.com/allenai/cached_path/pulls) for existing proposed fixes.
 - [ ] I have checked the [CHANGELOG](https://github.com/allenai/cached_path/blob/main/CHANGELOG.md) and the [commit log](https://github.com/allenai/cached_path/commits/main) to find out if the bug was already fixed in the main branch.
 - [ ] I have included in the "Description" section below a traceback from any exceptions related to this bug.
-- [ ] I have included in the "Related issues or possible duplicates" section beloew all related issues and possible duplicate issues (If there are none, check this box anyway).
+- [ ] I have included in the "Related issues or possible duplicates" section below all related issues and possible duplicate issues (If there are none, check this box anyway).
 - [ ] I have included in the "Environment" section below the name of the operating system and Python version that I was using when I discovered this bug.
 - [ ] I have included in the "Environment" section below the output of `pip freeze`.
 - [ ] I have included in the "Steps to reproduce" section below a minimally reproducible example.
