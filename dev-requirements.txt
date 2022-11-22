@@ -27,7 +27,7 @@ setuptools
 wheel
 
 # Mocking HTTP responses
-responses==0.21.0
+responses==0.22.0
 
 # Building docs
 Sphinx==5.3.0
