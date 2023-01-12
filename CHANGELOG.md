@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- Downloads from HuggingFace will be passed onto the `huggingface_hub` library completely so you won't end up with duplicates of the same objects if your using other libraries that use `huggingface_hub` directly, such as `transformers`.
+
 ## [v1.1.6](https://github.com/allenai/cached_path/releases/tag/v1.1.6) - 2022-09-28
 
 ### Changed

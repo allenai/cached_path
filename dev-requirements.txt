@@ -5,8 +5,8 @@ flake8
 mypy==0.991
 
 # Automatic code formatting
-black==22.10.0
-isort==5.10.1
+black==22.12.0
+isort==5.11.4
 
 # Running tests.
 pytest
@@ -33,7 +33,7 @@ responses==0.21.0
 Sphinx==5.3.0
 
 # Sphinx theme: https://sphinx-themes.org/sample-sites/furo/
-furo==2022.9.29
+furo==2022.12.7
 
 # Lets Sphinx parse markdown files in addition to rst.
 myst-parser==0.18.1

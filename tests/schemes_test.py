@@ -17,6 +17,9 @@ class CustomSchemeClient(SchemeClient):
     def get_etag(self):
         return "AAA"
 
+    def get_size(self):
+        return None
+
     def get_resource(self, temp_file):
         pass
 

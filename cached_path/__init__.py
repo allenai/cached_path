@@ -21,3 +21,17 @@ from .util import (
     is_url_or_existing_file,
     resource_to_filename,
 )
+
+__all__ = [
+    "cached_path",
+    "get_cache_dir",
+    "set_cache_dir",
+    "get_download_progress",
+    "SchemeClient",
+    "add_scheme_client",
+    "check_tarfile",
+    "filename_to_url",
+    "find_latest_cached",
+    "is_url_or_existing_file",
+    "resource_to_filename",
+]
