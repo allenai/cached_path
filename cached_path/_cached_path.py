@@ -128,9 +128,6 @@ def cached_path(
         the resource.
 
     """
-    cache_dir = Path(cache_dir if cache_dir else get_cache_dir()).expanduser()
-    cache_dir.mkdir(parents=True, exist_ok=True)
-
     if not isinstance(url_or_filename, str):
         url_or_filename = str(url_or_filename)
 
@@ -179,6 +176,8 @@ def cached_path(
 
     else:
         url_or_filename = Path(url_or_filename).expanduser()
+        cache_dir = Path(cache_dir if cache_dir else get_cache_dir()).expanduser()
+        cache_dir.mkdir(parents=True, exist_ok=True)
 
         if url_or_filename.exists():
             # File, and it exists.
@@ -272,10 +271,11 @@ def get_from_cache(
     Given a URL, look for the corresponding dataset in the local cache.
     If it's not there, download it. Then return the path to the cached file and the ETag.
     """
-    cache_dir = Path(cache_dir if cache_dir else get_cache_dir())
-
     if url.startswith("hf://"):
         return hf_get_from_cache(url, cache_dir), None
+
+    cache_dir = Path(cache_dir if cache_dir else get_cache_dir()).expanduser()
+    cache_dir.mkdir(parents=True, exist_ok=True)
 
     client = get_scheme_client(url)
 
