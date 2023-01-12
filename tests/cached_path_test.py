@@ -360,7 +360,7 @@ class TestCachedPathS3(BaseTestClass):
 class TestCachedPathHf(BaseTestClass):
     @flaky
     def test_cached_download_no_user_or_org(self):
-        path = cached_path("hf://t5-small/config.json")
+        path = cached_path("hf://t5-small/config.json", cache_dir=self.TEST_DIR)
         assert path.is_file()
         assert self.TEST_DIR in path.parents
 
@@ -368,7 +368,7 @@ class TestCachedPathHf(BaseTestClass):
     def test_snapshot_download_no_user_or_org(self):
         # This is the smallest snapshot I could find that is not associated with a user / org.
         model_name = "distilbert-base-german-cased"
-        path = cached_path(f"hf://{model_name}")
+        path = cached_path(f"hf://{model_name}", cache_dir=self.TEST_DIR)
         assert path.is_dir()
         assert self.TEST_DIR in path.parents
 
@@ -379,6 +379,8 @@ class TestCachedPathHf(BaseTestClass):
         #  2. the repo 'yyyy' under the user/org name 'xxxx'.
         # We default to (1), but if we get a 404 error or 401 error then we try (2).
         model_name = "lysandre/test-simple-tagger-tiny"
-        path = cached_path(f"hf://{model_name}")  # should resolve to option 2.
+        path = cached_path(
+            f"hf://{model_name}", cache_dir=self.TEST_DIR
+        )  # should resolve to option 2.
         assert path.is_dir()
         assert self.TEST_DIR in path.parents
