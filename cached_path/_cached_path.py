@@ -179,6 +179,7 @@ def cached_path(
             extraction_path = file_path.parent / (file_path.name + "-extracted")
 
     else:
+        orig_url_or_filename = url_or_filename
         url_or_filename = Path(url_or_filename).expanduser()
         cache_dir = Path(cache_dir if cache_dir else get_cache_dir()).expanduser()
         cache_dir.mkdir(parents=True, exist_ok=True)
@@ -209,7 +210,7 @@ def cached_path(
 
         else:
             # Something unknown
-            raise ValueError(f"unable to parse {url_or_filename} as a URL or as a local path")
+            raise ValueError(f"unable to parse {orig_url_or_filename} as a URL or as a local path")
 
     if extraction_path is not None:
         # If the extracted directory already exists (and is non-empty), then no
