@@ -386,8 +386,22 @@ class TestCachedPathHf(BaseTestClass):
         assert self.TEST_DIR in path.parents
 
 
+def beaker_available() -> bool:
+    try:
+        from beaker import Beaker, ConfigurationError  # type: ignore
+
+        try:
+            Beaker.from_env()
+            return True
+        except ConfigurationError:
+            return False
+    except (ImportError, ModuleNotFoundError):
+        return False
+
+
 class TestCachedPathBeaker(BaseTestClass):
     @flaky
+    @pytest.mark.skipif(not beaker_available(), reason="Beaker not configured")
     def test_cache_object(self):
         path = cached_path("beaker://petew/squad-train/squad-train.arrow")
         assert path.is_file()
