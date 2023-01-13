@@ -48,11 +48,15 @@ def cached_path(
     * ``gs`` for objects on `Google Cloud Storage (GCS)`_, and
     * ``hf`` for objects or repositories on `HuggingFace Hub`_.
 
+    If you have `Beaker-py`_ installed you can also use URLs of the form:
+    ``beaker://{user_name}/{dataset_name}/{file_path}``.
+
     You can also extend ``cached_path()`` to handle more schemes with :func:`add_scheme_client()`.
 
     .. _AWS S3: https://aws.amazon.com/s3/
     .. _Google Cloud Storage (GCS): https://cloud.google.com/storage
     .. _HuggingFace Hub: https://huggingface.co/
+    .. _Beaker-py: https://github.com/allenai/beaker-py
 
     Examples
     --------

@@ -10,8 +10,8 @@ from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import storage
 from google.cloud.storage.retry import DEFAULT_RETRY
 
-from cached_path.common import _split_cloud_path
-from cached_path.schemes.scheme_client import SchemeClient
+from ..common import _split_cloud_path
+from .scheme_client import SchemeClient
 
 
 class GsClient(SchemeClient):

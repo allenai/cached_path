@@ -384,3 +384,12 @@ class TestCachedPathHf(BaseTestClass):
         )  # should resolve to option 2.
         assert path.is_dir()
         assert self.TEST_DIR in path.parents
+
+
+class TestCachedPathBeaker(BaseTestClass):
+    @flaky
+    def test_cache_object(self):
+        path = cached_path("beaker://petew/squad-train/squad-train.arrow")
+        assert path.is_file()
+        meta = Meta.from_path(_meta_file_path(path))
+        assert meta.etag is not None
