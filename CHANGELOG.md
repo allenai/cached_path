@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.3.0](https://github.com/allenai/cached_path/releases/tag/v1.3.0) - 2023-01-12
+
 ### Added
 
 - Added optional support for `beaker://` URLs.
