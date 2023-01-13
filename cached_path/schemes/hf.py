@@ -16,8 +16,8 @@ from huggingface_hub.utils import (
     RevisionNotFoundError,
 )
 
-from cached_path.common import PathOrStr
-from cached_path.version import VERSION
+from ..common import PathOrStr
+from ..version import VERSION
 
 
 def hf_hub_download(
