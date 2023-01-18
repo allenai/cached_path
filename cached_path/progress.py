@@ -4,6 +4,38 @@ from typing import List, Optional
 from rich.progress import BarColumn, DownloadColumn, Progress, TaskID, TimeElapsedColumn
 
 
+class QuietProgress:
+    """
+    A mock `Progress` class that does absolutely nothing.
+    We use this when users pass `quiet=True` since rich's `Progress` still
+    prints empty lines with `quiet=True`.
+    """
+
+    def start(self, *args, **kwargs):
+        del args, kwargs
+
+    def stop(self, *args, **kwargs):
+        del args, kwargs
+
+    def update(self, *args, **kwargs):
+        del args, kwargs
+
+    def add_task(self, *args, **kwargs):
+        del args, kwargs
+
+    def advance(self, *args, **kwargs):
+        del args, kwargs
+
+    def stop_task(self, *args, **kwargs):
+        del args, kwargs
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args, **kwargs):  # type: ignore
+        del args, kwargs
+
+
 class BufferedWriterWithProgress(io.BufferedWriter):
     def __init__(self, handle: io.BufferedWriter, progress: Progress, task_id: TaskID):
         self.handle = handle
@@ -87,11 +119,14 @@ class BufferedWriterWithProgress(io.BufferedWriter):
 
 
 def get_download_progress(quiet: bool = False) -> Progress:
-    return Progress(
-        "[progress.description]{task.description}",
-        BarColumn(),
-        "[progress.percentage]{task.percentage:>3.0f}%",
-        TimeElapsedColumn(),
-        DownloadColumn(),
-        disable=quiet,
-    )
+    if quiet:
+        return QuietProgress()  # type: ignore
+    else:
+        return Progress(
+            "[progress.description]{task.description}",
+            BarColumn(),
+            "[progress.percentage]{task.percentage:>3.0f}%",
+            TimeElapsedColumn(),
+            DownloadColumn(),
+            #  disable=quiet,
+        )
