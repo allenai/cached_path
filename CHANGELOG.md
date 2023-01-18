@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.3.1](https://github.com/allenai/cached_path/releases/tag/v1.3.1) - 2023-01-18
+
 ### Fixed
 
 - No more blank lines when `quiet=True`.
