@@ -110,6 +110,8 @@ jobs:
           pip freeze
 
       - name: ${{ matrix.task.name }}
+        env:
+          BEAKER_TOKEN: ${{ secrets.BEAKER_TOKEN }}
         run: |
           . .venv/bin/activate
           ${{ matrix.task.run }}

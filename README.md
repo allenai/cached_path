@@ -81,6 +81,7 @@ then returns the path to the cached file. If it's already a local path,
 it makes sure the file exists and returns the path.
 
 For URLs, `http://`, `https://`, `s3://` (AWS S3), `gs://` (Google Cloud Storage), and `hf://` (HuggingFace Hub) are all supported out-of-the-box.
+Optionally `beaker://` URLs in the form of `beaker://{user_name}/{dataset_name}/{file_path}` are supported, which requires [beaker-py](https://github.com/allenai/beaker-py) to be installed.
 
 For example, to download the PyTorch weights for the model `epwalsh/bert-xsmall-dummy`
 on HuggingFace, you could do:

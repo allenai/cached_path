@@ -6,7 +6,7 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from urllib3.exceptions import MaxRetryError
 
-from cached_path.schemes.scheme_client import SchemeClient
+from .scheme_client import SchemeClient
 
 RECOVERABLE_SERVER_ERROR_CODES = (502, 503, 504)
 

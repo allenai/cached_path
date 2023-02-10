@@ -1,10 +1,20 @@
 from typing import Set, Type
 
-from cached_path.schemes.gs import GsClient
-from cached_path.schemes.hf import hf_get_from_cache
-from cached_path.schemes.http import HttpClient
-from cached_path.schemes.s3 import S3Client
-from cached_path.schemes.scheme_client import SchemeClient
+from .gs import GsClient
+from .hf import hf_get_from_cache
+from .http import HttpClient
+from .s3 import S3Client
+from .scheme_client import SchemeClient
+
+__all__ = ["GsClient", "HttpClient", "S3Client", "SchemeClient", "hf_get_from_cache"]
+
+try:
+    from .beaker import BeakerClient
+
+    __all__.append("BeakerClient")
+except (ImportError, ModuleNotFoundError):
+    BeakerClient = None  # type: ignore
+
 
 _SCHEME_TO_CLIENT = {}
 
@@ -28,6 +38,8 @@ def add_scheme_client(client: Type[SchemeClient]) -> None:
 
 for client in (HttpClient, S3Client, GsClient):
     add_scheme_client(client)  # type: ignore
+if BeakerClient is not None:
+    add_scheme_client(BeakerClient)
 
 
 def get_scheme_client(resource: str) -> SchemeClient:

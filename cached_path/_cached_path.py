@@ -48,11 +48,15 @@ def cached_path(
     * ``gs`` for objects on `Google Cloud Storage (GCS)`_, and
     * ``hf`` for objects or repositories on `HuggingFace Hub`_.
 
+    If you have `Beaker-py`_ installed you can also use URLs of the form:
+    ``beaker://{user_name}/{dataset_name}/{file_path}``.
+
     You can also extend ``cached_path()`` to handle more schemes with :func:`add_scheme_client()`.
 
     .. _AWS S3: https://aws.amazon.com/s3/
     .. _Google Cloud Storage (GCS): https://cloud.google.com/storage
     .. _HuggingFace Hub: https://huggingface.co/
+    .. _Beaker-py: https://github.com/allenai/beaker-py
 
     Examples
     --------
@@ -128,9 +132,6 @@ def cached_path(
         the resource.
 
     """
-    cache_dir = Path(cache_dir if cache_dir else get_cache_dir()).expanduser()
-    cache_dir.mkdir(parents=True, exist_ok=True)
-
     if not isinstance(url_or_filename, str):
         url_or_filename = str(url_or_filename)
 
@@ -178,7 +179,10 @@ def cached_path(
             extraction_path = file_path.parent / (file_path.name + "-extracted")
 
     else:
+        orig_url_or_filename = url_or_filename
         url_or_filename = Path(url_or_filename).expanduser()
+        cache_dir = Path(cache_dir if cache_dir else get_cache_dir()).expanduser()
+        cache_dir.mkdir(parents=True, exist_ok=True)
 
         if url_or_filename.exists():
             # File, and it exists.
@@ -206,7 +210,7 @@ def cached_path(
 
         else:
             # Something unknown
-            raise ValueError(f"unable to parse {url_or_filename} as a URL or as a local path")
+            raise ValueError(f"unable to parse {orig_url_or_filename} as a URL or as a local path")
 
     if extraction_path is not None:
         # If the extracted directory already exists (and is non-empty), then no
@@ -272,10 +276,11 @@ def get_from_cache(
     Given a URL, look for the corresponding dataset in the local cache.
     If it's not there, download it. Then return the path to the cached file and the ETag.
     """
-    cache_dir = Path(cache_dir if cache_dir else get_cache_dir())
-
     if url.startswith("hf://"):
         return hf_get_from_cache(url, cache_dir), None
+
+    cache_dir = Path(cache_dir if cache_dir else get_cache_dir()).expanduser()
+    cache_dir.mkdir(parents=True, exist_ok=True)
 
     client = get_scheme_client(url)
 

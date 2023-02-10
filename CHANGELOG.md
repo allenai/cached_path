@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.3.1](https://github.com/allenai/cached_path/releases/tag/v1.3.1) - 2023-01-18
+
+### Fixed
+
+- No more blank lines when `quiet=True`.
+
+## [v1.3.0](https://github.com/allenai/cached_path/releases/tag/v1.3.0) - 2023-01-12
+
+### Added
+
+- Added optional support for `beaker://` URLs.
+
+## [v1.2.0](https://github.com/allenai/cached_path/releases/tag/v1.2.0) - 2023-01-12
+
+### Changed
+
+- Downloads from HuggingFace will be passed onto the `huggingface_hub` library completely so you won't end up with duplicates of the same objects if your using other libraries that use `huggingface_hub` directly, such as `transformers`.
+
 ## [v1.1.6](https://github.com/allenai/cached_path/releases/tag/v1.1.6) - 2022-09-28
 
 ### Changed

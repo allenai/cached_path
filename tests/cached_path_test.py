@@ -360,21 +360,17 @@ class TestCachedPathS3(BaseTestClass):
 class TestCachedPathHf(BaseTestClass):
     @flaky
     def test_cached_download_no_user_or_org(self):
-        path = cached_path("hf://t5-small/config.json")
+        path = cached_path("hf://t5-small/config.json", cache_dir=self.TEST_DIR)
         assert path.is_file()
-        assert path.parent == self.TEST_DIR
-        meta = Meta.from_path(_meta_file_path(path))
-        assert meta.etag is not None
-        assert meta.resource == "hf://t5-small/config.json"
+        assert self.TEST_DIR in path.parents
 
     @flaky
     def test_snapshot_download_no_user_or_org(self):
         # This is the smallest snapshot I could find that is not associated with a user / org.
         model_name = "distilbert-base-german-cased"
-        path = cached_path(f"hf://{model_name}")
+        path = cached_path(f"hf://{model_name}", cache_dir=self.TEST_DIR)
         assert path.is_dir()
-        meta = Meta.from_path(_meta_file_path(path))
-        assert meta.resource == f"hf://{model_name}"
+        assert self.TEST_DIR in path.parents
 
     def test_snapshot_download_ambiguous_url(self):
         # URLs like 'hf://xxxx/yyyy' are potentially ambiguous,
@@ -383,7 +379,31 @@ class TestCachedPathHf(BaseTestClass):
         #  2. the repo 'yyyy' under the user/org name 'xxxx'.
         # We default to (1), but if we get a 404 error or 401 error then we try (2).
         model_name = "lysandre/test-simple-tagger-tiny"
-        path = cached_path(f"hf://{model_name}")  # should resolve to option 2.
+        path = cached_path(
+            f"hf://{model_name}", cache_dir=self.TEST_DIR
+        )  # should resolve to option 2.
         assert path.is_dir()
+        assert self.TEST_DIR in path.parents
+
+
+def beaker_available() -> bool:
+    try:
+        from beaker import Beaker, ConfigurationError  # type: ignore
+
+        try:
+            Beaker.from_env()
+            return True
+        except ConfigurationError:
+            return False
+    except (ImportError, ModuleNotFoundError):
+        return False
+
+
+class TestCachedPathBeaker(BaseTestClass):
+    @flaky
+    @pytest.mark.skipif(not beaker_available(), reason="Beaker not configured")
+    def test_cache_object(self):
+        path = cached_path("beaker://petew/cached-path-readme/README.md")
+        assert path.is_file()
         meta = Meta.from_path(_meta_file_path(path))
-        assert meta.resource == f"hf://{model_name}"
+        assert meta.etag is not None
