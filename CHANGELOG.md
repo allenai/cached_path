@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.3.2](https://github.com/allenai/cached_path/releases/tag/v1.3.2) - 2023-02-15
+
 ### Changed
 
 - Added support for newest `huggingface-hub` version.
