@@ -388,12 +388,13 @@ class TestCachedPathHf(BaseTestClass):
 
 def beaker_available() -> bool:
     try:
-        from beaker import Beaker, ConfigurationError  # type: ignore
+        from beaker import Beaker, BeakerError  # type: ignore
 
         try:
-            Beaker.from_env()
+            beaker = Beaker.from_env()
+            beaker.account.whoami()
             return True
-        except ConfigurationError:
+        except BeakerError:
             return False
     except (ImportError, ModuleNotFoundError):
         return False
