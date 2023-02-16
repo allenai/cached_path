@@ -2,7 +2,7 @@ import io
 from pathlib import Path
 from typing import Optional
 
-from beaker import Beaker, ChecksumFailedError, DatasetReadError
+from beaker import Beaker, ChecksumFailedError, DatasetNotFound, DatasetReadError
 
 from .scheme_client import SchemeClient
 
@@ -16,14 +16,21 @@ class BeakerClient(SchemeClient):
         self.beaker = Beaker.from_env()
         # Beaker resources should be in the form "{user}/{dataset_name}/{path}/{to}/{file}"
         path = Path(resource.split("://")[1])
-        if len(path.parts) < 3:
+        if len(path.parts) < 2:
             raise ValueError(
                 f"Invalid beaker resource URL '{resource}'. "
-                "Resources should be in the form 'beaker://{user_name}/{dataset_name}/{path_to_file}'"
+                "Resources should be in the form 'beaker://{user_name}/{dataset_name}/{path_to_file}' "
+                "or beaker://{dataset_id}/{path_to_file}."
             )
-        user, dataset_name, *filepath_parts = path.parts
+
+        try:
+            user, dataset_name, *filepath_parts = path.parts
+            self.dataset = self.beaker.dataset.get(f"{user}/{dataset_name}")
+        except DatasetNotFound:
+            dataset_id, *filepath_parts = path.parts
+            self.dataset = self.beaker.dataset.get(dataset_id)
+
         self.filepath = "/".join(filepath_parts)
-        self.dataset = self.beaker.dataset.get(f"{user}/{dataset_name}")
         self.file_info = self.beaker.dataset.file_info(self.dataset, self.filepath)
 
     def get_etag(self) -> Optional[str]:
