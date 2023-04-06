@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.3.4](https://github.com/allenai/cached_path/releases/tag/v1.3.4) - 2023-04-06
+
 ### Fixed
 
 - Fixed issue where progress bar would jump around for big downloads.
