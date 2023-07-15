@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- Added support for newest versions of `FileLock` and `huggingface-hub`.
+
 ## [v1.3.4](https://github.com/allenai/cached_path/releases/tag/v1.3.4) - 2023-04-06
 
 ### Fixed
