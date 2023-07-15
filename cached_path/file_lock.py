@@ -1,5 +1,6 @@
 import os
 import warnings
+from typing import Optional
 
 from filelock import AcquireReturnProxy
 from filelock import FileLock as _FileLock
@@ -22,7 +23,12 @@ class FileLock(_FileLock):
         super().__init__(str(lock_file), timeout=timeout)
         self._read_only_ok = read_only_ok
 
-    def acquire(self, timeout=None, poll_interval=0.05, **kwargs) -> AcquireReturnProxy:
+    def acquire(  # type: ignore[override]
+        self,
+        timeout=None,
+        poll_interval=0.05,
+        **kwargs,
+    ) -> Optional[AcquireReturnProxy]:
         try:
             return super().acquire(timeout=timeout, poll_interval=poll_interval, **kwargs)
         except OSError as err:
@@ -34,11 +40,12 @@ class FileLock(_FileLock):
             if err.errno not in (1, 13, 30):
                 raise
 
-            if os.path.isfile(self._lock_file) and self._read_only_ok:
+            if os.path.isfile(self.lock_file) and self._read_only_ok:
                 warnings.warn(
-                    f"Lacking permissions required to obtain lock '{self._lock_file}'. "
+                    f"Lacking permissions required to obtain lock '{self.lock_file}'. "
                     "Race conditions are possible if other processes are writing to the same resource.",
                     UserWarning,
                 )
+                return None
             else:
                 raise
