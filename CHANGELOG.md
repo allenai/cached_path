@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.4.0](https://github.com/allenai/cached_path/releases/tag/v1.4.0) - 2023-08-02
+
 ### Added
 
 - Added support for file paths in the form of a URL like: `file://`.
