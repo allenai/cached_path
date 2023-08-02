@@ -177,7 +177,8 @@ def cached_path(
             # This is the path the file should be extracted to.
             # For example ~/.cached_path/cache/234234.21341 -> ~/.cached_path/cache/234234.21341-extracted
             extraction_path = file_path.parent / (file_path.name + "-extracted")
-
+    elif parsed.scheme == "file":
+        return cached_path(url_or_filename.replace("file://", "", 1))
     else:
         orig_url_or_filename = url_or_filename
         url_or_filename = Path(url_or_filename).expanduser()
@@ -189,7 +190,6 @@ def cached_path(
             file_path = url_or_filename
             # Normalize the path.
             url_or_filename = url_or_filename.resolve()
-
             if (
                 extract_archive
                 and file_path.is_file()
@@ -203,11 +203,9 @@ def cached_path(
                     + "-extracted"
                 )
                 extraction_path = cache_dir / extraction_name
-
         elif parsed.scheme == "":
             # File, but it doesn't exist.
             raise FileNotFoundError(f"file {url_or_filename} not found")
-
         else:
             # Something unknown
             raise ValueError(f"unable to parse {orig_url_or_filename} as a URL or as a local path")

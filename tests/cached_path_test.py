@@ -241,6 +241,7 @@ class TestCachedPathLocalFiles(BaseTestClass):
             short_path = f"~/{fname}"
             assert cached_path(short_path) == full_path
             assert cached_path(Path(short_path)) == full_path
+            assert cached_path(f"file://{short_path}") == full_path
 
 
 class TestCachedPathWithArchive(BaseTestClass):
