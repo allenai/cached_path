@@ -1,3 +1,79 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cached_path"
+dynamic = ["version"]
+readme = "README.md"
+description = "A file utility for accessing both local and remote files through a unified interface"
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+authors = [
+    { name = "Allen Institute for Artificial Intelligence", email = "contact@allenai.org" },
+]
+license = {file = "LICENSE"}
+requires-python = ">3.7"
+dependencies = [
+    "requests>=2.0,<3.0",
+    "rich>=12.1,<14.0",
+    "filelock>=3.4,<3.13",
+    "boto3>=1.0,<2.0",
+    "google-cloud-storage>=1.32.0,<3.0",
+    "huggingface-hub>=0.8.1,<0.17.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "beaker-py>=1.13.2,<2.0",
+    "ruff",
+    "mypy==1.2.0",
+    "black==22.12.0",
+    "isort==5.11.4",
+    "pytest",
+    "flaky",
+    "twine>=1.11.0",
+    "setuptools",
+    "wheel",
+    "build",
+    "responses==0.21.0",
+    "Sphinx==5.3.0",
+    "furo==2023.3.27",
+    "myst-parser==0.18.1",
+    "sphinx-copybutton==0.5.2",
+    "sphinx-autobuild==2021.3.14",
+    "sphinx-autodoc-typehints",
+    "packaging",
+]
+
+[project.urls]
+Homepage = "https://github.com/allenai/cached_path"
+Repository = "https://github.com/allenai/cached_path"
+Changelog = "https://github.com/allenai/cached_path/blob/main/CHANGELOG.md"
+Documentation = "https://cached-path.readthedocs.io/"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+exclude = [
+    "tests*",
+    "docs*",
+    "scripts*",
+    "examples*",
+    "integration_tests*",
+]
+
+[tool.setuptools.package-data]
+cached_path = ["py.typed"]
+
+[tool.setuptools.dynamic]
+version = {attr = "cached_path.version.VERSION"}
+
 [tool.black]
 line-length = 100
 
@@ -20,6 +96,35 @@ exclude = '''
 profile = "black"
 multi_line_output = 3
 
-[build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+[tool.ruff]
+line-length = 115
+ignore = ["E501", "F403", "F405"]
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["F401"]
+
+[tool.mypy]
+ignore_missing_imports = true
+no_site_packages = true
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+strict_optional = false
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests/",
+    "integration_tests/",
+]
+python_classes = [
+    "Test*",
+    "*Test",
+]
+log_format = "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+log_level = "DEBUG"
+filterwarnings = [
+    'ignore:.*distutils Version classes are deprecated.*:DeprecationWarning:docker\.utils\.utils',
+    'ignore::DeprecationWarning:google\.rpc',
+    'ignore::DeprecationWarning:pkg_resources',
+]
