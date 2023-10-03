@@ -39,6 +39,7 @@ dev = [
     "twine>=1.11.0",
     "setuptools",
     "wheel",
+    "build",
     "responses==0.21.0",
     "Sphinx==5.3.0",
     "furo==2023.3.27",
