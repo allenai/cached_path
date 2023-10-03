@@ -9,3 +9,6 @@ python:
   install:
     - requirements: requirements.txt
     - requirements: dev-requirements.txt
+
+build:
+  os: ubuntu-22.04
