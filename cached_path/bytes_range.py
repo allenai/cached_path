@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Optional
 from urllib.parse import urlparse
 
-from ._cached_path import cached_path
+from ._cached_path import cached_path, get_from_cache
 from .common import PathOrStr
 from .schemes import get_scheme_client, get_supported_schemes
 
@@ -108,6 +108,22 @@ def get_bytes_range(
     if urlparse(url_or_filename).scheme in get_supported_schemes():
         # URL, so use the scheme client.
         client = get_scheme_client(url_or_filename)
+
+        # Check if file is already downloaded.
+        try:
+            cache_path, _ = get_from_cache(
+                url_or_filename,
+                cache_dir=cache_dir,
+                quiet=quiet,
+                progress=progress,
+                no_downloads=True,
+                _client=client,
+            )
+            return _bytes_range_from_file(cache_path, index, length)
+        except FileNotFoundError:
+            pass
+
+        # Otherwise try streaming bytes directly.
         try:
             return client.get_bytes_range(index, length)
         except NotImplementedError:
