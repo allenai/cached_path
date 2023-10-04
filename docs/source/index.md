@@ -20,6 +20,7 @@ faq
 :caption: API Docs
 
 api/cached_path
+api/get_bytes_range
 api/util
 ```
 

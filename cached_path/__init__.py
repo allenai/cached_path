@@ -11,6 +11,7 @@ You can also extend **cached-path** to support other schemes with :func:`add_sch
 """
 
 from ._cached_path import cached_path
+from .bytes_range import get_bytes_range
 from .common import get_cache_dir, set_cache_dir
 from .progress import get_download_progress
 from .schemes import SchemeClient, add_scheme_client
@@ -24,6 +25,7 @@ from .util import (
 
 __all__ = [
     "cached_path",
+    "get_bytes_range",
     "get_cache_dir",
     "set_cache_dir",
     "get_download_progress",

@@ -4,7 +4,7 @@ Overview
 The main functionality of **cached-path** is provided by the function {func}`~cached_path.cached_path()`.
 
 ```{testsetup}
->>> from cached_path import cached_path, set_cache_dir
+>>> from cached_path import cached_path, set_cache_dir, get_bytes_range
 >>> set_cache_dir(cache_dir)
 >>>
 ```
@@ -38,6 +38,13 @@ and the local path returned from `cached_path()` would point to the newly downlo
 
 ```{tip}
 There are multiple ways to [change the cache directory](#overriding-the-default-cache-directory).
+```
+
+You can also get a range of bytes directly using {func}`~cached_path.get_bytes_range()`. For example:
+
+```python
+>>> get_bytes_range("https://raw.githubusercontent.com/allenai/cached_path/main/README.md", 0, 100)
+b'# [cached-path](https://cached-path.readt'
 ```
 
 ## Supported URL schemes

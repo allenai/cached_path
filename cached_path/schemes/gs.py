@@ -8,6 +8,7 @@ from typing import Optional, Tuple
 from google.api_core.exceptions import NotFound
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import storage
+from google.cloud.storage.blob import Blob
 from google.cloud.storage.retry import DEFAULT_RETRY
 
 from ..common import _split_cloud_path
@@ -42,12 +43,16 @@ class GsClient(SchemeClient):
         self.load()
         self.blob.download_to_file(temp_file, checksum="md5", retry=DEFAULT_RETRY)
 
+    def get_bytes_range(self, index: int, length: int) -> bytes:
+        self.load()
+        return self.blob.download_as_bytes(start=index, end=index + length - 1)
+
     @staticmethod
     def split_gcs_path(resource: str) -> Tuple[str, str]:
         return _split_cloud_path(resource, "gs")
 
     @staticmethod
-    def get_gcs_blob(resource: str) -> storage.blob.Blob:
+    def get_gcs_blob(resource: str) -> Blob:
         try:
             gcs_resource = storage.Client()
         except DefaultCredentialsError:

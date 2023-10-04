@@ -72,6 +72,18 @@ class HttpClient(SchemeClient):
                 if chunk:  # filter out keep-alive new chunks
                     temp_file.write(chunk)
 
+    def get_bytes_range(self, index: int, length: int) -> bytes:
+        with session_with_backoff() as session:
+            try:
+                response = session.get(
+                    self.resource, headers={"Range": f"bytes={index}-{index+length-1}"}
+                )
+            except MaxRetryError as e:
+                raise RecoverableServerError(e.reason)
+            self.validate_response(response)
+            # 'content' might contain the full file if the server doesn't support the "Range" header.
+            return response.content[:length]
+
     def validate_response(self, response):
         if response.status_code == 404:
             raise FileNotFoundError(self.resource)
