@@ -1,11 +1,11 @@
 import io
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import ClassVar, Optional, Tuple, Type, Union
 
 import requests
 
 
-class SchemeClient:
+class SchemeClient(ABC):
     """
     A client used for caching remote resources corresponding to URLs with a particular scheme.
 
@@ -109,6 +109,16 @@ class SchemeClient:
 
         ``Other errors``
             Any other error type can be raised. These errors will be treated non-recoverable
-            and will be propogated immediately by ``cached_path()``.
+            and will be propagated immediately by ``cached_path()``.
         """
+        raise NotImplementedError
+
+    def get_bytes_range(self, index: int, length: int) -> bytes:
+        """
+        Get a sequence of ``length`` bytes from the resource, starting at ``index`` bytes.
+
+        If a scheme provides a direct way of downloading a bytes range, the scheme client
+        should implement that. Otherwise the entire file has to be downloaded.
+        """
+        del index, length
         raise NotImplementedError

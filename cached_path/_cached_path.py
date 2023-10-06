@@ -12,7 +12,12 @@ from .cache_file import CacheFile
 from .common import PathOrStr, get_cache_dir
 from .file_lock import FileLock
 from .meta import Meta
-from .schemes import get_scheme_client, get_supported_schemes, hf_get_from_cache
+from .schemes import (
+    SchemeClient,
+    get_scheme_client,
+    get_supported_schemes,
+    hf_get_from_cache,
+)
 from .util import (
     _lock_file_path,
     _meta_file_path,
@@ -269,6 +274,8 @@ def get_from_cache(
     cache_dir: Optional[PathOrStr] = None,
     quiet: bool = False,
     progress: Optional["Progress"] = None,
+    no_downloads: bool = False,
+    _client: Optional[SchemeClient] = None,
 ) -> Tuple[Path, Optional[str]]:
     """
     Given a URL, look for the corresponding dataset in the local cache.
@@ -279,8 +286,7 @@ def get_from_cache(
 
     cache_dir = Path(cache_dir if cache_dir else get_cache_dir()).expanduser()
     cache_dir.mkdir(parents=True, exist_ok=True)
-
-    client = get_scheme_client(url)
+    client = _client or get_scheme_client(url)
 
     # Get eTag to add to filename, if it exists.
     try:
@@ -327,6 +333,8 @@ def get_from_cache(
     with FileLock(_lock_file_path(cache_path), read_only_ok=True):
         if os.path.exists(cache_path):
             logger.info("cache of %s is up-to-date", url)
+        elif no_downloads:
+            raise FileNotFoundError(cache_path)
         else:
             size = client.get_size()
             with CacheFile(cache_path) as cache_file:

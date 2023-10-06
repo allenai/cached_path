@@ -5,8 +5,9 @@ AWS S3.
 import io
 from typing import Optional, Tuple
 
-import boto3
-import botocore
+import boto3.session
+import botocore.client
+import botocore.exceptions
 
 from ..common import _split_cloud_path
 from .scheme_client import SchemeClient
@@ -14,7 +15,8 @@ from .scheme_client import SchemeClient
 
 class S3Client(SchemeClient):
     recoverable_errors = SchemeClient.recoverable_errors + (
-        botocore.exceptions.EndpointConnectionError,
+        botocore.exceptions.HTTPClientError,
+        botocore.exceptions.ConnectionError,
     )
     scheme = "s3"
 
@@ -54,6 +56,10 @@ class S3Client(SchemeClient):
     def get_resource(self, temp_file: io.BufferedWriter) -> None:
         self.load()
         self.s3_object.download_fileobj(temp_file)
+
+    def get_bytes_range(self, index: int, length: int) -> bytes:
+        self.load()
+        return self.s3_object.get(Range=f"bytes={index}-{index + length - 1}")["Body"].read()
 
     @staticmethod
     def split_s3_path(url: str) -> Tuple[str, str]:

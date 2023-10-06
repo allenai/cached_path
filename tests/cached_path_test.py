@@ -10,6 +10,7 @@ from flaky import flaky
 from requests.exceptions import ConnectionError, HTTPError
 
 from cached_path._cached_path import cached_path, get_from_cache
+from cached_path.bytes_range import get_bytes_range
 from cached_path.meta import Meta
 from cached_path.schemes.http import HttpClient, RecoverableServerError
 from cached_path.testing import BaseTestClass
@@ -327,11 +328,23 @@ class TestCachedPathWithArchive(BaseTestClass):
 
 class TestCachedPathGs(BaseTestClass):
     @flaky
-    def test_cache_blob(self):
+    def test_bytes_and_cache_blob(self):
+        # Get some bytes without downloading the file.
+        bytes_snippet = get_bytes_range(
+            "gs://allennlp-public-models/bert-xsmall-dummy.tar.gz", 5, 10
+        )
+        assert len(bytes_snippet) == 10
+
         path = cached_path("gs://allennlp-public-models/bert-xsmall-dummy.tar.gz")
         assert path.is_file()
         meta = Meta.from_path(_meta_file_path(path))
         assert meta.etag is not None
+
+        # Now get a range of bytes, this time it should read from the cached file.
+        bytes_snippet_2 = get_bytes_range(
+            "gs://allennlp-public-models/bert-xsmall-dummy.tar.gz", 5, 10
+        )
+        assert bytes_snippet_2 == bytes_snippet
 
     @flaky
     def test_cache_and_extract_blob(self):
@@ -351,11 +364,20 @@ class TestCachedPathGs(BaseTestClass):
 
 class TestCachedPathS3(BaseTestClass):
     @flaky
-    def test_cache_object(self):
+    def test_bytes_and_cache_object(self):
+        # Get some bytes without downloading the file.
+        bytes_snippet = get_bytes_range("s3://allennlp/datasets/squad/squad-dev-v1.1.json", 5, 10)
+        assert len(bytes_snippet) == 10
+
+        # Download the file.
         path = cached_path("s3://allennlp/datasets/squad/squad-dev-v1.1.json")
         assert path.is_file()
         meta = Meta.from_path(_meta_file_path(path))
         assert meta.etag is not None
+
+        # Now get a range of bytes, this time it should read from the cached file.
+        bytes_snippet_2 = get_bytes_range("s3://allennlp/datasets/squad/squad-dev-v1.1.json", 5, 10)
+        assert bytes_snippet_2 == bytes_snippet
 
 
 class TestCachedPathHf(BaseTestClass):
