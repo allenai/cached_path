@@ -31,7 +31,7 @@ dependencies = [
 dev = [
     "beaker-py>=1.13.2,<2.0",
     "ruff",
-    "mypy==1.2.0",
+    "mypy==1.6.0",
     "black==22.12.0",
     "isort==5.11.4",
     "pytest",
