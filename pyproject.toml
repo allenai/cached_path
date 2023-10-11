@@ -41,7 +41,7 @@ dev = [
     "wheel",
     "build",
     "responses==0.21.0",
-    "Sphinx==5.3.0",
+    "Sphinx==7.2.6",
     "furo==2023.3.27",
     "myst-parser==0.18.1",
     "sphinx-copybutton==0.5.2",
