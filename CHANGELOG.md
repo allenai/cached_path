@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.5.0](https://github.com/allenai/cached_path/releases/tag/v1.5.0) - 2023-10-11
+
 ### Added
 
 - Added `get_bytes_range()` function.
