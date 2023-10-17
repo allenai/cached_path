@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Removed
+
+- Removed official support for Python 3.7
+
 ## [v1.5.0](https://github.com/allenai/cached_path/releases/tag/v1.5.0) - 2023-10-11
 
 ### Added
