@@ -57,7 +57,7 @@ class Meta:
         cached_path: PathOrStr,
         *,
         etag: Optional[str] = None,
-        extraction_dir: bool = False
+        extraction_dir: bool = False,
     ) -> "Meta":
         return cls(  # type: ignore
             resource=str(resource),
@@ -99,7 +99,7 @@ class Meta:
             return os.path.getsize(path)
         inodes: Set[int] = set()
         total_size = 0
-        for dirpath, dirnames, filenames in os.walk(str(path)):
+        for dirpath, _, filenames in os.walk(str(path)):
             for f in filenames:
                 fp = os.path.join(dirpath, f)
                 # skip if it is symbolic link or the same as a file we've already accounted
