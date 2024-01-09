@@ -242,7 +242,7 @@ def cached_path(
             # during the extraction process so we don't end up with a corrupted cache.
             tmp_extraction_dir = tempfile.mkdtemp(dir=os.path.split(extraction_path)[0])
             try:
-                if is_zipfile(file_path):
+                if file_path.suffix == "zip":
                     with ZipFile(file_path, "r") as zip_file:
                         zip_file.extractall(tmp_extraction_dir)
                         zip_file.close()
