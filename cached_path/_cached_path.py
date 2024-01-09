@@ -242,15 +242,15 @@ def cached_path(
             # during the extraction process so we don't end up with a corrupted cache.
             tmp_extraction_dir = tempfile.mkdtemp(dir=os.path.split(extraction_path)[0])
             try:
-                if is_zipfile(file_path):
-                    with ZipFile(file_path, "r") as zip_file:
-                        zip_file.extractall(tmp_extraction_dir)
-                        zip_file.close()
-                else:
+                if tarfile.is_tarfile(file_path):
                     tar_file = tarfile.open(file_path)
                     check_tarfile(tar_file)
                     tar_file.extractall(tmp_extraction_dir)
                     tar_file.close()
+                else:
+                    with ZipFile(file_path, "r") as zip_file:
+                        zip_file.extractall(tmp_extraction_dir)
+                        zip_file.close()
                 # Extraction was successful, rename temp directory to final
                 # cache directory and dump the meta data.
                 os.replace(tmp_extraction_dir, extraction_path)
