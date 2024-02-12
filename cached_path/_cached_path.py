@@ -32,22 +32,29 @@ if TYPE_CHECKING:
 logger = logging.getLogger("cached_path")
 
 
-def _is_rarfile(path: PathOrStr) -> bool:
+def _is_rarfile(path: PathOrStr, url_or_filename: PathOrStr) -> bool:
     try:
         import rarfile
 
         return rarfile.is_rarfile(path)
     except ImportError:
-        if str(path).lower().endswith(".rar"):
+        if str(url_or_filename).lower().endswith(".rar"):
             import warnings
 
-            warnings.warn(f"The file has a 'rar' extension but rarfile is unavailable: {path}")
+            warnings.warn(
+                f"The file has a 'rar' extension but rarfile is unavailable: {url_or_filename}"
+                "\nSee https://rarfile.readthedocs.io/"
+            )
 
         return False
 
 
-def _is_archive(file_path: PathOrStr) -> bool:
-    return is_zipfile(file_path) or tarfile.is_tarfile(file_path) or _is_rarfile(file_path)
+def _is_archive(file_path: PathOrStr, url_or_filename) -> bool:
+    return (
+        is_zipfile(file_path)
+        or tarfile.is_tarfile(file_path)
+        or _is_rarfile(file_path, url_or_filename)
+    )
 
 
 def cached_path(
@@ -196,7 +203,7 @@ def cached_path(
         # URL, so get it from the cache (downloading if necessary)
         file_path, etag = get_from_cache(url_or_filename, cache_dir, quiet=quiet, progress=progress)
 
-        if extract_archive and _is_archive(file_path):
+        if extract_archive and _is_archive(file_path, url_or_filename):
             # This is the path the file should be extracted to.
             # For example ~/.cached_path/cache/234234.21341 -> ~/.cached_path/cache/234234.21341-extracted
             extraction_path = file_path.parent / (file_path.name + "-extracted")
@@ -213,7 +220,7 @@ def cached_path(
             file_path = url_or_filename
             # Normalize the path.
             url_or_filename = url_or_filename.resolve()
-            if extract_archive and file_path.is_file() and _is_archive(file_path):
+            if extract_archive and file_path.is_file() and _is_archive(file_path, url_or_filename):
                 # We'll use a unique directory within the cache to root to extract the archive to.
                 # The name of the directory is a hash of the resource file path and it's modification
                 # time. That way, if the file changes, we'll know when to extract it again.
@@ -260,7 +267,7 @@ def cached_path(
                     with tarfile.open(file_path) as tar_file:
                         check_tarfile(tar_file)
                         tar_file.extractall(tmp_extraction_dir)
-                elif _is_rarfile(file_path):
+                elif _is_rarfile(file_path, url_or_filename):
                     import rarfile
 
                     with rarfile.RarFile(file_path) as rar_file:
