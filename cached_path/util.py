@@ -51,7 +51,7 @@ def filename_to_url(
     return metadata.resource, metadata.etag
 
 
-def find_latest_cached(url: str, cache_dir: Optional[PathOrStr] = None) -> Optional[Path]:
+def find_latest_cached(url: str, cache_dir: Optional[PathOrStr] = None, verbose: bool = False) -> Optional[Path]:
     """
     Get the path to the latest cached version of a given resource.
     """
@@ -59,7 +59,8 @@ def find_latest_cached(url: str, cache_dir: Optional[PathOrStr] = None) -> Optio
     filename = resource_to_filename(url)
     candidates: List[Tuple[Path, float]] = []
     for path in cache_dir.glob(f"{filename}*"):
-        print(path, path.suffix, path.name)
+        if verbose:
+            print(path, path.suffix, path.name)
         if path.suffix in {".json", ".lock"} or path.name.endswith("-extracted"):
             continue
         mtime = path.stat().st_mtime
