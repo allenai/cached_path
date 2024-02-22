@@ -13,6 +13,11 @@ from ..common import _split_cloud_path
 
 
 class R2Client(SchemeClient):
+    recoverable_errors = SchemeClient.recoverable_errors + (
+        botocore.exceptions.HTTPClientError,
+        botocore.exceptions.ConnectionError,
+    )
+
     scheme = "r2"
 
     def __init__(self, resource: str) -> None:
