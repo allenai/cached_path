@@ -56,10 +56,12 @@ class R2Client(SchemeClient):
 
     def get_etag(self) -> Optional[str]:
         self._ensure_object_info()
+        assert self.object_info is not None
         return self.object_info.get("ETag")
 
     def get_size(self) -> Optional[int]:
         self._ensure_object_info()
+        assert self.object_info is not None
         return self.object_info.get("ContentLength")
 
     def get_resource(self, temp_file: io.BufferedWriter) -> None:
