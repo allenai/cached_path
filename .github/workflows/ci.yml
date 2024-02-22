@@ -82,7 +82,7 @@ jobs:
           # Use week number in cache key so we can refresh the cache weekly.
           echo "WEEK_NUMBER=$(date +%V)" >> $GITHUB_ENV
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v4
         id: virtualenv-cache
         with:
           path: .venv
@@ -117,7 +117,7 @@ jobs:
 
       - name: Upload package distribution files
         if: matrix.task.name == 'Build' && matrix.python == env.DEFAULT_PYTHON
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: package
           path: dist
@@ -134,10 +134,10 @@ jobs:
     needs: [checks]
     if: startsWith(github.ref, 'refs/tags/')
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -152,7 +152,7 @@ jobs:
           echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
       - name: Download package distribution files
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: package
           path: dist
