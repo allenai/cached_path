@@ -7,6 +7,7 @@ from typing import Optional
 
 import boto3.session
 from botocore.config import Config
+import botocore.exceptions
 
 from .scheme_client import SchemeClient
 from ..common import _split_cloud_path
