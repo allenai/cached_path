@@ -51,7 +51,9 @@ def filename_to_url(
     return metadata.resource, metadata.etag
 
 
-def find_latest_cached(url: str, cache_dir: Optional[PathOrStr] = None, verbose: bool = False) -> Optional[Path]:
+def find_latest_cached(
+    url: str, cache_dir: Optional[PathOrStr] = None, verbose: bool = False
+) -> Optional[Path]:
     """
     Get the path to the latest cached version of a given resource.
     """
