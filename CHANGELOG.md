@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added support for R2 (`r2://*`).
 - `verbose` parameter for `find_latest_cached()`
 - Added support for extracting RAR files.
 

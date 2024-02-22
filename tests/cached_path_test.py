@@ -380,6 +380,31 @@ class TestCachedPathS3(BaseTestClass):
         assert bytes_snippet_2 == bytes_snippet
 
 
+class TestCachedPathR2(BaseTestClass):
+    @flaky
+    @pytest.mark.skip(
+        reason="R2 doesn't support publically readable buckets and we don't want to require authentication to run tests."
+    )
+    def test_bytes_and_cache_object(self):
+        # Get some bytes without downloading the file.
+        bytes_snippet = get_bytes_range(
+            "r2://allennlp/test_file_for_cached_path_unittests.txt", 5, 10
+        )
+        assert len(bytes_snippet) == 10
+
+        # Download the file.
+        path = cached_path("r2://allennlp/test_file_for_cached_path_unittests.txt")
+        assert path.is_file()
+        meta = Meta.from_path(_meta_file_path(path))
+        assert meta.etag is not None
+
+        # Now get a range of bytes, this time it should read from the cached file.
+        bytes_snippet_2 = get_bytes_range(
+            "r2://allennlp/test_file_for_cached_path_unittests.txt", 5, 10
+        )
+        assert bytes_snippet_2 == bytes_snippet
+
+
 class TestCachedPathHf(BaseTestClass):
     @flaky
     def test_cached_download_no_user_or_org(self):
