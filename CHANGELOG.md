@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- `verbose` parameter for `find_latest_cached()`
+- Added support for extracting RAR files.
+
 ## [v1.5.2](https://github.com/allenai/cached_path/releases/tag/v1.5.2) - 2024-01-09
 
 ### Fixed
