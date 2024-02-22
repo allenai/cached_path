@@ -1,6 +1,7 @@
 """
 Cloudflare R2.
 """
+
 import io
 import os
 from typing import Optional
