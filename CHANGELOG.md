@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.6.2](https://github.com/allenai/cached_path/releases/tag/v1.6.2) - 2024-03-05
+
 ### Fixed
 
 - Updated dependencies
