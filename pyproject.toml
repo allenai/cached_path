@@ -43,7 +43,7 @@ dev = [
     "responses==0.21.0",
     "Sphinx>=6.0,<8.0",
     "furo==2024.1.29",
-    "myst-parser>=1.0.0,<3.0",
+    "myst-parser>=1.0.0,<4.0",
     "sphinx-copybutton==0.5.2",
     "sphinx-autobuild==2021.3.14",
     "sphinx-autodoc-typehints",
