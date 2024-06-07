@@ -77,9 +77,11 @@ class R2Client(SchemeClient):
         return self.object_info.get("ContentLength")
 
     def get_resource(self, temp_file: io.BufferedWriter) -> None:
+        self._ensure_object_info()
         self.s3.download_fileobj(Fileobj=temp_file, Bucket=self.bucket_name, Key=self.path)
 
     def get_bytes_range(self, index: int, length: int) -> bytes:
+        self._ensure_object_info()
         response = self.s3.get_object(
             Bucket=self.bucket_name, Key=self.path, Range=f"bytes={index}-{index+length-1}"
         )
