@@ -30,7 +30,9 @@ class R2Client(SchemeClient):
         # find credentials
         endpoint_url = os.environ.get("R2_ENDPOINT_URL")
         if endpoint_url is None:
-            raise ValueError("R2 endpoint url is not set. Did you forget to set the 'R2_ENDPOINT_URL' env var?")
+            raise ValueError(
+                "R2 endpoint url is not set. Did you forget to set the 'R2_ENDPOINT_URL' env var?"
+            )
         profile_name = os.environ.get("R2_PROFILE")
         access_key_id = os.environ.get("R2_ACCESS_KEY_ID")
         secret_access_key = os.environ.get("R2_SECRET_ACCESS_KEY")
