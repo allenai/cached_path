@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Updated dependencies
-
+- Fix authentication with AWS profile for R2
+- Make R2 throw FileNotFoundError instead of botocore.client.ClientError when object does not exist.
 
 ## [v1.6.0](https://github.com/allenai/cached_path/releases/tag/v1.6.0) - 2024-02-22
 
