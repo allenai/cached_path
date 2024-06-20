@@ -3,8 +3,8 @@ from typing import Set, Type
 from .gs import GsClient
 from .hf import hf_get_from_cache
 from .http import HttpClient
-from .s3 import S3Client
 from .r2 import R2Client
+from .s3 import S3Client
 from .scheme_client import SchemeClient
 
 __all__ = ["GsClient", "HttpClient", "S3Client", "R2Client", "SchemeClient", "hf_get_from_cache"]
