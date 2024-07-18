@@ -24,7 +24,7 @@ dependencies = [
     "filelock>=3.4,<3.14",
     "boto3>=1.0,<2.0",
     "google-cloud-storage>=1.32.0,<3.0",
-    "huggingface-hub>=0.8.1,<0.24.0",
+    "huggingface-hub>=0.8.1,<0.25.0",
 ]
 
 [project.optional-dependencies]
