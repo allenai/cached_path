@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.6.5](https://github.com/allenai/cached_path/releases/tag/v1.6.5) - 2024-12-09
+
+### Fixed
+
+- Loosened `filelock` dependency.
+
 ## [v1.6.4](https://github.com/allenai/cached_path/releases/tag/v1.6.4) - 2024-11-20
 
 ### Added
