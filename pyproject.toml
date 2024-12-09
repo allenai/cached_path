@@ -40,7 +40,7 @@ dev = [
     "setuptools",
     "wheel",
     "build",
-    "responses==0.21.0",
+    "responses==0.25.0",
     "Sphinx>=6.0,<8.0",
     "furo==2024.1.29",
     "myst-parser>=1.0.0,<3.0",
