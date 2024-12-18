@@ -2,6 +2,7 @@
 Google Cloud Storage.
 """
 
+from functools import cache
 import io
 from typing import Optional, Tuple
 
@@ -53,11 +54,18 @@ class GsClient(SchemeClient):
 
     @staticmethod
     def get_gcs_blob(resource: str) -> Blob:
-        try:
-            gcs_resource = storage.Client()
-        except DefaultCredentialsError:
-            gcs_resource = storage.Client.create_anonymous_client()
+        gcs_client = _get_gcs_client()
         bucket_name, gcs_path = GsClient.split_gcs_path(resource)
-        bucket = gcs_resource.bucket(bucket_name)
+        bucket = gcs_client.bucket(bucket_name)
         blob = bucket.blob(gcs_path)
         return blob
+
+
+@cache
+def _get_gcs_client():
+    try:
+        client = storage.Client()
+    except DefaultCredentialsError:
+        client = storage.Client.create_anonymous_client()
+
+    return client
