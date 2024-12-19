@@ -3,6 +3,7 @@ AWS S3.
 """
 
 import io
+from functools import cache
 from typing import Optional, Tuple
 
 import boto3.session
@@ -23,15 +24,8 @@ class S3Client(SchemeClient):
     def __init__(self, resource: str) -> None:
         super().__init__(resource)
         bucket_name, s3_path = S3Client.split_s3_path(resource)
-        session = boto3.session.Session()
-        if session.get_credentials() is None:
-            # Use unsigned requests.
-            s3_resource = session.resource(
-                "s3", config=botocore.client.Config(signature_version=botocore.UNSIGNED)
-            )
-        else:
-            s3_resource = session.resource("s3")
-        self.s3_object = s3_resource.Object(bucket_name, s3_path)
+        s3_resource = _get_s3_resource_client()
+        self.s3_object = s3_resource.Object(bucket_name, s3_path)  # type: ignore
         self._loaded = False
 
     def load(self):
@@ -41,7 +35,7 @@ class S3Client(SchemeClient):
                 self._loaded = True
             except botocore.exceptions.ClientError as exc:
                 if int(exc.response["Error"]["Code"]) == 404:
-                    raise FileNotFoundError("file {} not found".format(self.resource))
+                    raise FileNotFoundError("file {} not found".format(self.resource)) from exc
                 else:
                     raise
 
@@ -64,3 +58,17 @@ class S3Client(SchemeClient):
     @staticmethod
     def split_s3_path(url: str) -> Tuple[str, str]:
         return _split_cloud_path(url, "s3")
+
+
+@cache
+def _get_s3_resource_client():
+    session = boto3.session.Session()
+    if session.get_credentials() is None:
+        # Use unsigned requests.
+        resource_client = session.resource(
+            "s3", config=botocore.client.Config(signature_version=botocore.UNSIGNED)
+        )
+    else:
+        resource_client = session.resource("s3")
+
+    return resource_client
