@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.6.6](https://github.com/allenai/cached_path/releases/tag/v1.6.6) - 2024-12-19
+
+### Fixed
+
+- Made clients more robust by reusing existing underlying clients.
+
 ## [v1.6.5](https://github.com/allenai/cached_path/releases/tag/v1.6.5) - 2024-12-09
 
 ### Added
