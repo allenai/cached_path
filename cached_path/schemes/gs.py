@@ -29,8 +29,8 @@ class GsClient(SchemeClient):
             try:
                 self.blob.reload()
                 self._loaded = True
-            except NotFound:
-                raise FileNotFoundError(self.resource)
+            except NotFound as exc:
+                raise FileNotFoundError(self.resource) from exc
 
     def get_etag(self) -> Optional[str]:
         self.load()
@@ -62,7 +62,7 @@ class GsClient(SchemeClient):
 
 
 @cache
-def _get_gcs_client():
+def _get_gcs_client() -> storage.Client:
     try:
         client = storage.Client()
     except DefaultCredentialsError:
