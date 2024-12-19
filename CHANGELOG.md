@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Loosened `filelock` dependency.
+- Fixed issue where making too many calls to Google Cloud Storage causes `Compute Engine Metadata server unavailable` error 
 
 ## [v1.6.4](https://github.com/allenai/cached_path/releases/tag/v1.6.4) - 2024-11-20
 
