@@ -8,7 +8,10 @@ from pathlib import Path
 import pytest
 import responses
 from flaky import flaky
-from requests.exceptions import ConnectionError, HTTPError
+from requests.exceptions import (  # type: ignore[import-untyped]
+    ConnectionError,
+    HTTPError,
+)
 
 from cached_path._cached_path import cached_path, get_from_cache
 from cached_path.bytes_range import get_bytes_range

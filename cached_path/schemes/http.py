@@ -1,10 +1,10 @@
 import io
 from typing import Optional
 
-import requests
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
+import requests  # type: ignore[import-untyped]
+from requests.adapters import HTTPAdapter  # type: ignore[import-untyped]
 from urllib3.exceptions import MaxRetryError
+from urllib3.util.retry import Retry
 
 from .scheme_client import SchemeClient
 

@@ -2,7 +2,7 @@ import io
 from abc import ABC, abstractmethod
 from typing import ClassVar, Optional, Tuple, Type, Union
 
-import requests
+import requests  # type: ignore[import-untyped]
 
 
 class SchemeClient(ABC):
