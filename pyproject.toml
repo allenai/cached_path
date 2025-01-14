@@ -19,7 +19,7 @@ authors = [
 license = {file = "LICENSE"}
 requires-python = ">3.8"
 dependencies = [
-    "requests>=2.0,<3.0",
+    "requests",
     "rich>=12.1,<14.0",
     "filelock>=3.4,<4.0",
     "boto3>=1.0,<2.0",
