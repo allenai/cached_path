@@ -64,6 +64,7 @@ def cached_path(
     force_extract: bool = False,
     quiet: bool = False,
     progress: Optional["Progress"] = None,
+    symlink: bool = False,
 ) -> Path:
     """
     Given something that might be a URL or local path, determine which.
@@ -142,6 +143,9 @@ def cached_path(
     progress :
         A custom progress display to use. If not set and ``quiet=False``, a default display
         from :func:`~cached_path.get_download_progress()` will be used.
+
+    symlink :
+        If ``True``, create a symlink to the cached file with the original file name.
 
     Returns
     -------
@@ -289,6 +293,15 @@ def cached_path(
                 shutil.rmtree(tmp_extraction_dir, ignore_errors=True)
 
         return extraction_path
+
+    if symlink:
+        symlink_dir = file_path.parent / (file_path.name + "-symlink")
+        symlink_dir.mkdir(exist_ok=True)
+        meta = Meta.from_path(str(file_path) + ".json")
+        symlink_path = symlink_dir / Path(meta.resource).name
+        if not symlink_path.exists():
+            symlink_path.symlink_to(file_path)
+        return symlink_path
 
     return file_path
 
