@@ -202,7 +202,9 @@ def cached_path(
 
     if parsed.scheme in get_supported_schemes():
         # URL, so get it from the cache (downloading if necessary)
-        file_path, etag = get_from_cache(url_or_filename, cache_dir, quiet=quiet, progress=progress)
+        file_path, etag = get_from_cache(
+            url_or_filename, cache_dir, quiet=quiet, progress=progress, headers=headers
+        )
 
         if extract_archive and _is_archive(file_path, url_or_filename):
             # This is the path the file should be extracted to.
