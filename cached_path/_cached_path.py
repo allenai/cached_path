@@ -50,7 +50,11 @@ def _is_rarfile(path: PathOrStr, url_or_filename: PathOrStr) -> bool:
 
 
 def _is_archive(file_path: PathOrStr, url_or_filename) -> bool:
-    return is_zipfile(file_path) or tarfile.is_tarfile(file_path) or _is_rarfile(file_path, url_or_filename)
+    return (
+        is_zipfile(file_path)
+        or tarfile.is_tarfile(file_path)
+        or _is_rarfile(file_path, url_or_filename)
+    )
 
 
 def cached_path(
@@ -188,7 +192,9 @@ def cached_path(
             headers=headers,
         )
         if not cached_archive_path.is_dir():
-            raise ValueError(f"{url_or_filename} uses the ! syntax, but does not specify an archive file.")
+            raise ValueError(
+                f"{url_or_filename} uses the ! syntax, but does not specify an archive file."
+            )
 
         # Now return the full path to the desired file within the extracted archive,
         # provided it exists.
@@ -228,7 +234,8 @@ def cached_path(
                 # The name of the directory is a hash of the resource file path and it's modification
                 # time. That way, if the file changes, we'll know when to extract it again.
                 extraction_name = (
-                    resource_to_filename(url_or_filename, str(os.path.getmtime(file_path))) + "-extracted"
+                    resource_to_filename(url_or_filename, str(os.path.getmtime(file_path)))
+                    + "-extracted"
                 )
                 extraction_path = cache_dir / extraction_name
         elif parsed.scheme == "":
