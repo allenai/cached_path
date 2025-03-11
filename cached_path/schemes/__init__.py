@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, Optional, Set, Type
 
 from .gs import GsClient
@@ -18,6 +19,8 @@ except (ImportError, ModuleNotFoundError):
 
 
 _SCHEME_TO_CLIENT = {}
+
+logger = logging.getLogger(__name__)
 
 
 def add_scheme_client(client: Type[SchemeClient]) -> None:
@@ -64,9 +67,12 @@ def get_scheme_client(resource: str, headers: Optional[Dict[str, str]] = None) -
     maybe_scheme = resource.split("://")[0]
     client_cls = _SCHEME_TO_CLIENT.get(maybe_scheme, HttpClient)
 
-    # Only pass headers to HttpClient
-    if client_cls == HttpClient and headers:
-        return client_cls(resource, headers=headers)
+    if headers:
+        if client_cls == HttpClient:
+            return client_cls(resource, headers=headers)
+        else:
+            msg = f"Headers are only supported for HTTP/HTTPS resources, got {client_cls}"
+            logger.warning(msg)
 
     return client_cls(resource)
 
