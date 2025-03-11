@@ -71,7 +71,7 @@ def get_scheme_client(resource: str, headers: Optional[Dict[str, str]] = None) -
         if client_cls == HttpClient:
             return client_cls(resource, headers=headers)
         else:
-            msg = f"Headers are only supported for HTTP/HTTPS resources, got {client_cls}"
+            msg = f"Headers are only supported for HTTP/HTTPS resources, got {client_cls.__name__}"
             logger.warning(msg)
 
     return client_cls(resource)
