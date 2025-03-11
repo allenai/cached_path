@@ -1,4 +1,4 @@
-from typing import Set, Type
+from typing import Dict, Optional, Set, Type
 
 from .gs import GsClient
 from .hf import hf_get_from_cache
@@ -43,12 +43,32 @@ if BeakerClient is not None:
     add_scheme_client(BeakerClient)
 
 
-def get_scheme_client(resource: str) -> SchemeClient:
+def get_scheme_client(resource: str, headers: Optional[Dict[str, str]] = None) -> SchemeClient:
     """
     Get the right client for the given resource.
+
+    Parameters
+    ----------
+    resource : str
+        The URL or path to the resource.
+    headers : Optional[Dict[str, str]], optional
+        Custom headers to add to HTTP requests, by default None.
+        Example: {"Authorization": "Bearer YOUR_TOKEN"} for private resources.
+        Only used for HTTP/HTTPS resources.
+
+    Returns
+    -------
+    SchemeClient
+        The appropriate client for the resource.
     """
     maybe_scheme = resource.split("://")[0]
-    return _SCHEME_TO_CLIENT.get(maybe_scheme, HttpClient)(resource)
+    client_cls = _SCHEME_TO_CLIENT.get(maybe_scheme, HttpClient)
+
+    # Only pass headers to HttpClient
+    if client_cls == HttpClient and headers:
+        return client_cls(resource, headers=headers)
+
+    return client_cls(resource)
 
 
 def get_supported_schemes() -> Set[str]:

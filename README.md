@@ -99,6 +99,18 @@ returning the local path to the specific file. For example:
 cached_path("model.tar.gz!weights.th", extract_archive=True)
 ```
 
+### Using custom headers for HTTP requests
+
+You can provide custom headers for HTTP requests, which is useful for accessing private resources that require authentication:
+
+```python
+# Using an API token for private resources (e.g. Hugging Face)
+headers = {"Authorization": f"Bearer {hf_token}"}
+cached_path("https://huggingface.co/api/models/private-model/resolve/main/model.bin", headers=headers)
+```
+
+This is particularly useful for downloading private files from services like Hugging Face, GitHub, or any other API that uses Bearer token authentication.
+
 ### Cache directory
 
 By default the cache directory is `~/.cache/cached_path/`, however there are several ways to override this setting:
