@@ -7,6 +7,7 @@ import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional, Tuple
 from urllib.parse import urlparse
+import fastzipfile
 from zipfile import ZipFile, is_zipfile
 
 from .cache_file import CacheFile
@@ -71,6 +72,7 @@ def cached_path(
     quiet: bool = False,
     progress: Optional["Progress"] = None,
     symlink: bool = False,
+    zip_pwd: Optional[str] = None,
 ) -> Path:
     """
     Given something that might be a URL or local path, determine which.
@@ -193,6 +195,8 @@ def cached_path(
             force_extract=force_extract,
             quiet=quiet,
             progress=progress,
+            symlink=False,
+            zip_pwd=zip_pwd,
         )
         if not cached_archive_path.is_dir():
             raise ValueError(
@@ -299,7 +303,7 @@ def cached_path(
                             shutil.copyfileobj(bz2_file, out_file)
                 else:
                     with ZipFile(file_path) as zip_file:
-                        zip_file.extractall(tmp_extraction_dir)
+                        zip_file.extractall(tmp_extraction_dir, pwd=zip_pwd.encode() if zip_pwd else None)
                 # Extraction was successful, rename temp directory to final
                 # cache directory and dump the meta data.
                 os.replace(tmp_extraction_dir, extraction_path)
