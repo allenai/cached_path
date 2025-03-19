@@ -251,20 +251,10 @@ def cached_path(
             raise ValueError(f"unable to parse {orig_url_or_filename} as a URL or as a local path")
 
     if extraction_path is not None:
-        def _get_bz2_extract_symlink():
-            assert _is_bz2file(url_or_filename)
-            symlink_dir = file_path.parent / (file_path.name + "-symlink")
-            symlink_dir.mkdir(exist_ok=True)
-            meta = Meta.from_path(str(file_path) + ".json")
-            symlink_path = symlink_dir / Path(meta.resource).name[:-4]
-            if not symlink_path.exists():
-                symlink_path.symlink_to(extraction_path/Path(meta.resource).name[:-4])
-            return symlink_path
+        assert not symlink
         # If the extracted directory already exists (and is non-empty), then no
         # need to create a lock file and extract again unless `force_extract=True`.
         if os.path.isdir(extraction_path) and os.listdir(extraction_path) and not force_extract:
-            if symlink:
-                return _get_bz2_extract_symlink()
             return extraction_path
 
         # Extract it.
@@ -317,8 +307,8 @@ def cached_path(
             finally:
                 shutil.rmtree(tmp_extraction_dir, ignore_errors=True)
 
-        if symlink:
-            return _get_bz2_extract_symlink()
+        if _is_bz2file(url_or_filename):
+            return extraction_path / Path(url_or_filename).name[:-4]
         return extraction_path
 
     if symlink:
