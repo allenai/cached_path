@@ -1,10 +1,10 @@
 import io
-from typing import Optional
+from typing import Dict, Optional
 
-import requests
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
+import requests  # type: ignore[import-untyped]
+from requests.adapters import HTTPAdapter  # type: ignore[import-untyped]
 from urllib3.exceptions import MaxRetryError
+from urllib3.util.retry import Retry
 
 from .scheme_client import SchemeClient
 
@@ -17,18 +17,28 @@ class RecoverableServerError(requests.exceptions.HTTPError):
     """
 
 
-def session_with_backoff() -> requests.Session:
+def session_with_backoff(headers: Optional[Dict[str, str]] = None) -> requests.Session:
     """
     We ran into an issue where http requests to s3 were timing out,
     possibly because we were making too many requests too quickly.
     This helper function returns a requests session that has retry-with-backoff
     built in. See
     <https://stackoverflow.com/questions/23267409/how-to-implement-retry-mechanism-into-python-requests-library>.
+
+    Parameters
+    ----------
+    headers : Optional[Dict[str, str]], optional
+        Custom headers to add to all requests, by default None
     """
     session = requests.Session()
     retries = Retry(total=5, backoff_factor=1, status_forcelist=RECOVERABLE_SERVER_ERROR_CODES)
     session.mount("http://", HTTPAdapter(max_retries=retries))
     session.mount("https://", HTTPAdapter(max_retries=retries))
+
+    # Add custom headers if provided
+    if headers:
+        session.headers.update(headers)
+
     return session
 
 
@@ -36,15 +46,27 @@ class HttpClient(SchemeClient):
     scheme = ("http", "https")
     recoverable_errors = SchemeClient.recoverable_errors + (RecoverableServerError,)
 
-    def __init__(self, resource: str) -> None:
+    def __init__(self, resource: str, headers: Optional[Dict[str, str]] = None) -> None:
+        """
+        Initialize an HTTP client for the given resource.
+
+        Parameters
+        ----------
+        resource : str
+            The URL to the resource.
+        headers : Optional[Dict[str, str]], optional
+            Custom headers to add to all requests, by default None.
+            Example: {"Authorization": "Bearer YOUR_TOKEN"} for private resources.
+        """
         super().__init__(resource)
         self._head_response = None
+        self.headers = headers or {}
 
     @property
     def head_response(self):
         if self._head_response is None:
             try:
-                with session_with_backoff() as session:
+                with session_with_backoff(self.headers) as session:
                     response = session.head(self.resource, allow_redirects=True)
             except MaxRetryError as e:
                 raise RecoverableServerError(e.reason)
@@ -62,7 +84,7 @@ class HttpClient(SchemeClient):
         return None if content_length is None else int(content_length)
 
     def get_resource(self, temp_file: io.BufferedWriter) -> None:
-        with session_with_backoff() as session:
+        with session_with_backoff(self.headers) as session:
             try:
                 response = session.get(self.resource, stream=True)
             except MaxRetryError as e:

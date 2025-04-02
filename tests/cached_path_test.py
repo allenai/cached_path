@@ -1,13 +1,17 @@
 import shutil
 import tempfile
 import time
+import uuid
 from collections import Counter
 from pathlib import Path
 
 import pytest
 import responses
 from flaky import flaky
-from requests.exceptions import ConnectionError, HTTPError
+from requests.exceptions import (  # type: ignore[import-untyped]
+    ConnectionError,
+    HTTPError,
+)
 
 from cached_path._cached_path import cached_path, get_from_cache
 from cached_path.bytes_range import get_bytes_range
@@ -449,10 +453,25 @@ def beaker_available() -> bool:
 
 
 class TestCachedPathBeaker(BaseTestClass):
+    def setup_method(self):
+        super().setup_method()
+
+        from beaker import Beaker
+
+        self.beaker = Beaker.from_env(default_workspace="cached-path-testing")
+        self.username = self.beaker.account.whoami().name
+        self.dataset_name = f"cached-path-{str(uuid.uuid4())[:8]}"
+        self.dataset = self.beaker.dataset.create(self.dataset_name, "README.md")
+        self.url = f"beaker://{self.username}/{self.dataset_name}/README.md"
+
+    def teardown_method(self):
+        super().teardown_method()
+        self.beaker.dataset.delete(self.dataset)
+
     @flaky
     @pytest.mark.skipif(not beaker_available(), reason="Beaker not configured")
     def test_cache_object(self):
-        path = cached_path("beaker://petew/cached-path-readme/README.md")
+        path = cached_path(self.url)
         assert path.is_file()
         meta = Meta.from_path(_meta_file_path(path))
         assert meta.etag is not None

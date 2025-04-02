@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Optional
 
 import huggingface_hub as hf_hub
-import requests
+import requests  # type: ignore[import-untyped]
 from huggingface_hub.utils import (
     EntryNotFoundError,
     RepositoryNotFoundError,

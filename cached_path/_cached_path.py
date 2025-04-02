@@ -4,7 +4,7 @@ import shutil
 import tarfile
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Dict, Literal, Optional, Tuple, Union
 from urllib.parse import urlparse
 from zipfile import ZipFile, is_zipfile
 
@@ -64,6 +64,7 @@ def cached_path(
     force_extract: bool = False,
     quiet: bool = False,
     progress: Optional["Progress"] = None,
+    headers: Optional[Dict[str, str]] = None,
 ) -> Path:
     """
     Given something that might be a URL or local path, determine which.
@@ -144,6 +145,11 @@ def cached_path(
         A custom progress display to use. If not set and ``quiet=False``, a default display
         from :func:`~cached_path.get_download_progress()` will be used.
 
+    headers :
+        Custom headers to add to HTTP requests.
+        Example: ``{"Authorization": "Bearer YOUR_TOKEN"}`` for private resources.
+        Only used for HTTP/HTTPS resources.
+
     Returns
     -------
     :class:`pathlib.Path`
@@ -190,6 +196,7 @@ def cached_path(
             force_extract=force_extract,
             quiet=quiet,
             progress=progress,
+            headers=headers,
         )
         if not cached_archive_path.is_dir():
             raise ValueError(
@@ -208,7 +215,9 @@ def cached_path(
 
     if parsed.scheme in get_supported_schemes():
         # URL, so get it from the cache (downloading if necessary)
-        file_path, etag = get_from_cache(url_or_filename, cache_dir, quiet=quiet, progress=progress)
+        file_path, etag = get_from_cache(
+            url_or_filename, cache_dir, quiet=quiet, progress=progress, headers=headers
+        )
 
         if extract_archive and _is_archive(file_path, url_or_filename):
             # This is the path the file should be extracted to.
@@ -307,6 +316,7 @@ def get_from_cache(
     progress: Optional["Progress"] = None,
     no_downloads: bool = False,
     _client: Optional[SchemeClient] = None,
+    headers: Optional[Dict[str, str]] = None,
 ) -> Tuple[Path, Optional[str]]:
     """
     Given a URL, look for the corresponding dataset in the local cache.
@@ -317,7 +327,7 @@ def get_from_cache(
 
     cache_dir = Path(cache_dir if cache_dir else get_cache_dir()).expanduser()
     cache_dir.mkdir(parents=True, exist_ok=True)
-    client = _client or get_scheme_client(url)
+    client = _client or get_scheme_client(url, headers=headers)
 
     # Get eTag to add to filename, if it exists.
     try:
@@ -335,8 +345,7 @@ def get_from_cache(
         latest_cached = find_latest_cached(url, cache_dir)
         if latest_cached:
             logger.info(
-                "ETag request failed with recoverable error, using latest cached "
-                "version of %s: %s",
+                "ETag request failed with recoverable error, using latest cached version of %s: %s",
                 url,
                 latest_cached,
             )
@@ -344,8 +353,7 @@ def get_from_cache(
             return latest_cached, meta.etag
         else:
             logger.error(
-                "ETag request failed with recoverable error, "
-                "but no cached version of %s could be found",
+                "ETag request failed with recoverable error, but no cached version of %s could be found",
                 url,
             )
             raise
@@ -380,7 +388,7 @@ def get_from_cache(
                     progress.start()
 
                 try:
-                    display_url = url if len(url) <= 30 else f"\N{horizontal ellipsis}{url[-30:]}"
+                    display_url = url if len(url) <= 30 else f"\N{HORIZONTAL ELLIPSIS}{url[-30:]}"
                     task_id = progress.add_task(f"Downloading [cyan i]{display_url}[/]", total=size)
                     writer_with_progress = BufferedWriterWithProgress(cache_file, progress, task_id)
                     client.get_resource(writer_with_progress)

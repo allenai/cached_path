@@ -3,6 +3,7 @@ Google Cloud Storage.
 """
 
 import io
+from functools import cache
 from typing import Optional, Tuple
 
 from google.api_core.exceptions import NotFound
@@ -28,8 +29,8 @@ class GsClient(SchemeClient):
             try:
                 self.blob.reload()
                 self._loaded = True
-            except NotFound:
-                raise FileNotFoundError(self.resource)
+            except NotFound as exc:
+                raise FileNotFoundError(self.resource) from exc
 
     def get_etag(self) -> Optional[str]:
         self.load()
@@ -53,11 +54,18 @@ class GsClient(SchemeClient):
 
     @staticmethod
     def get_gcs_blob(resource: str) -> Blob:
-        try:
-            gcs_resource = storage.Client()
-        except DefaultCredentialsError:
-            gcs_resource = storage.Client.create_anonymous_client()
+        gcs_client = _get_gcs_client()
         bucket_name, gcs_path = GsClient.split_gcs_path(resource)
-        bucket = gcs_resource.bucket(bucket_name)
+        bucket = gcs_client.bucket(bucket_name)
         blob = bucket.blob(gcs_path)
         return blob
+
+
+@cache
+def _get_gcs_client() -> storage.Client:
+    try:
+        client = storage.Client()
+    except DefaultCredentialsError:
+        client = storage.Client.create_anonymous_client()
+
+    return client

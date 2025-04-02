@@ -7,12 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.7.1](https://github.com/allenai/cached_path/releases/tag/v1.7.1) - 2025-03-11
+
+### Fixed
+
+- Fixed a bug with the headers.
+
+## [v1.7.0](https://github.com/allenai/cached_path/releases/tag/v1.7.0) - 2025-03-11
+
+### Added
+
+- Added `headers` option for passing custom headers to HTTP requests.
+
+## [v1.6.7](https://github.com/allenai/cached_path/releases/tag/v1.6.7) - 2025-01-14
+
+### Added
+
+- Added support for new release of HuggingFace-Hub.
+
+## [v1.6.6](https://github.com/allenai/cached_path/releases/tag/v1.6.6) - 2024-12-19
+
+### Fixed
+
+- Made clients more robust by reusing existing underlying clients.
+
+## [v1.6.5](https://github.com/allenai/cached_path/releases/tag/v1.6.5) - 2024-12-09
+
+### Added
+
+- Caching of S3, R2 and GCS cloud storage clients, for better multi-threading support.
+
+### Fixed
+
+- Loosened `filelock` dependency.
+- Fixed issue where making too many calls to Google Cloud Storage causes `Compute Engine Metadata server unavailable` error.
+
+## [v1.6.4](https://github.com/allenai/cached_path/releases/tag/v1.6.4) - 2024-11-20
+
+### Added
+
+- Added support for new version of huggingface-hub.
+
+## [v1.6.3](https://github.com/allenai/cached_path/releases/tag/v1.6.3) - 2024-06-20
+
+### Added
+
+- Added support for new version of huggingface-hub.
+
 ## [v1.6.2](https://github.com/allenai/cached_path/releases/tag/v1.6.2) - 2024-03-05
 
 ### Fixed
 
 - Updated dependencies
-
+- Fix authentication with AWS profile for R2
+- Make R2 throw FileNotFoundError instead of botocore.client.ClientError when object does not exist.
 
 ## [v1.6.0](https://github.com/allenai/cached_path/releases/tag/v1.6.0) - 2024-02-22
 
