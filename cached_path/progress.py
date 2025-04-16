@@ -42,17 +42,23 @@ class BufferedWriterWithProgress(io.BufferedWriter):
         self.progress = progress
         self.task_id = task_id
         self.total_written = 0
+        self.handle.mode
+
+    @property
+    def mode(self):
+        return self.handle.mode
+
+    @property
+    def closed(self) -> bool:
+        return self.handle.closed
 
     def __enter__(self) -> "BufferedWriterWithProgress":
         self.handle.__enter__()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        del exc_type, exc_val, exc_tb
         self.close()
-
-    @property
-    def closed(self) -> bool:
-        return self.handle.closed
 
     def close(self):
         self.handle.close()
@@ -78,8 +84,8 @@ class BufferedWriterWithProgress(io.BufferedWriter):
     def read(self, size: Optional[int] = -1) -> bytes:
         return self.handle.read(size)
 
-    def read1(self, size: Optional[int] = -1) -> bytes:
-        return self.handle.read1()
+    def read1(self, size: int = -1, /) -> bytes:
+        return self.handle.read1(size)
 
     def readinto(self, b):
         return self.handle.readinto(b)

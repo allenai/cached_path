@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Fixed incompatibility issue with latest boto3/botocore release (>=1.37.34) .
+
 ## [v1.7.1](https://github.com/allenai/cached_path/releases/tag/v1.7.1) - 2025-03-11
 
 ### Fixed
