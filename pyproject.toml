@@ -17,7 +17,7 @@ authors = [
     { name = "Allen Institute for Artificial Intelligence", email = "contact@allenai.org" },
 ]
 license = {file = "LICENSE"}
-requires-python = ">3.8"
+requires-python = ">3.9"
 dependencies = [
     "requests",
     "rich>=12.1,<14.0",
