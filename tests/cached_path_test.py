@@ -440,11 +440,12 @@ class TestCachedPathHf(BaseTestClass):
 
 def beaker_available() -> bool:
     try:
-        from beaker import Beaker, BeakerError  # type: ignore
+        from beaker import Beaker
+        from beaker.exceptions import BeakerError
 
         try:
             beaker = Beaker.from_env()
-            beaker.account.whoami()
+            beaker.user.get()
             return True
         except BeakerError:
             return False
@@ -454,19 +455,21 @@ def beaker_available() -> bool:
 
 class TestCachedPathBeaker(BaseTestClass):
     def setup_method(self):
-        super().setup_method()
-
         from beaker import Beaker
 
-        self.beaker = Beaker.from_env(default_workspace="cached-path-testing")
-        self.username = self.beaker.account.whoami().name
-        self.dataset_name = f"cached-path-{str(uuid.uuid4())[:8]}"
-        self.dataset = self.beaker.dataset.create(self.dataset_name, "README.md")
-        self.url = f"beaker://{self.username}/{self.dataset_name}/README.md"
+        super().setup_method()
+        with Beaker.from_env(default_workspace="ai2/cached-path-testing") as beaker:
+            self.username = beaker.user_name
+            self.dataset_name = f"cached-path-{str(uuid.uuid4())[:8]}"
+            self.dataset = beaker.dataset.create(self.dataset_name, "README.md")
+            self.url = f"beaker://{self.username}/{self.dataset_name}/README.md"
 
     def teardown_method(self):
+        from beaker import Beaker
+
         super().teardown_method()
-        self.beaker.dataset.delete(self.dataset)
+        with Beaker.from_env(default_workspace="ai2/cached-path-testing") as beaker:
+            beaker.dataset.delete(self.dataset)
 
     @flaky
     @pytest.mark.skipif(not beaker_available(), reason="Beaker not configured")
