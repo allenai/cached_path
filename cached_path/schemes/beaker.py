@@ -2,18 +2,19 @@ import io
 from pathlib import Path
 from typing import Optional
 
-from beaker import Beaker, ChecksumFailedError, DatasetNotFound, DatasetReadError
+from beaker import Beaker
+from beaker.exceptions import BeakerChecksumFailedError, BeakerDatasetNotFound
 
 from .scheme_client import SchemeClient
 
 
 class BeakerClient(SchemeClient):
     scheme = ("beaker",)
-    recoverable_errors = SchemeClient.recoverable_errors + (DatasetReadError, ChecksumFailedError)
+    recoverable_errors = SchemeClient.recoverable_errors + (BeakerChecksumFailedError,)
 
     def __init__(self, resource: str) -> None:
         super().__init__(resource)
-        self.beaker = Beaker.from_env()
+
         # Beaker resources should be in the form "{user}/{dataset_name}/{path}/{to}/{file}"
         path = Path(resource.split("://")[1])
         if len(path.parts) < 2:
@@ -23,15 +24,16 @@ class BeakerClient(SchemeClient):
                 "or beaker://{dataset_id}/{path_to_file}."
             )
 
-        try:
-            user, dataset_name, *filepath_parts = path.parts
-            self.dataset = self.beaker.dataset.get(f"{user}/{dataset_name}")
-        except DatasetNotFound:
-            dataset_id, *filepath_parts = path.parts
-            self.dataset = self.beaker.dataset.get(dataset_id)
+        with Beaker.from_env() as beaker:
+            try:
+                user, dataset_name, *filepath_parts = path.parts
+                self.dataset = beaker.dataset.get(f"{user}/{dataset_name}")
+            except BeakerDatasetNotFound:
+                dataset_id, *filepath_parts = path.parts
+                self.dataset = beaker.dataset.get(dataset_id)
 
-        self.filepath = "/".join(filepath_parts)
-        self.file_info = self.beaker.dataset.file_info(self.dataset, self.filepath)
+            self.filepath = "/".join(filepath_parts)
+            self.file_info = beaker.dataset.get_file_info(self.dataset, self.filepath)
 
     def get_etag(self) -> Optional[str]:
         return None if self.file_info.digest is None else str(self.file_info.digest)
@@ -40,6 +42,7 @@ class BeakerClient(SchemeClient):
         return self.file_info.size
 
     def get_resource(self, temp_file: io.BufferedWriter) -> None:
-        for chunk in self.beaker.dataset.stream_file(self.dataset, self.filepath, quiet=True):
-            if chunk:
-                temp_file.write(chunk)
+        with Beaker.from_env() as beaker:
+            for chunk in beaker.dataset.stream_file(self.dataset, self.filepath):
+                if chunk:
+                    temp_file.write(chunk)
