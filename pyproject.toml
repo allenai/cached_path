@@ -30,7 +30,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "beaker-py>=2.2,<3.0",
+    "beaker-py<3.0",
     "ruff",
     "mypy>=1.6.0,<2.0",
     "black>=23.1.0,<25.0",
