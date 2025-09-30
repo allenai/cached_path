@@ -117,7 +117,7 @@ class BufferedWriterWithProgress(io.BufferedWriter):
         return self.handle.tell()
 
     @property
-    def raw(self):
+    def raw(self):  # type: ignore[override]
         return self.handle.raw
 
     def detach(self):
