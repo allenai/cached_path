@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Requires beaker-py v2 for `beaker://` requests.
 - Requires Python >= 3.10.
 
+## [v1.7.4](https://github.com/allenai/cached_path/releases/tag/v1.7.4) - 2025-09-29
+
+- Added support for v1.0 of HuggingFace-Hub.
+
 ## [v1.7.3](https://github.com/allenai/cached_path/releases/tag/v1.7.3) - 2025-05-07
 
 ### Added
