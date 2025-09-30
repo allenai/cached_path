@@ -3,7 +3,8 @@ from pathlib import Path
 from typing import Optional
 
 from beaker import Beaker
-from beaker.exceptions import BeakerChecksumFailedError, BeakerDatasetNotFound
+from beaker.exceptions import BeakerChecksumFailedError  # type: ignore
+from beaker.exceptions import BeakerDatasetNotFound  # type: ignore
 
 from .scheme_client import SchemeClient
 
@@ -24,7 +25,7 @@ class BeakerClient(SchemeClient):
                 "or beaker://{dataset_id}/{path_to_file}."
             )
 
-        with Beaker.from_env() as beaker:
+        with Beaker.from_env() as beaker:  # type: ignore
             try:
                 user, dataset_name, *filepath_parts = path.parts
                 self.dataset = beaker.dataset.get(f"{user}/{dataset_name}")
@@ -42,7 +43,7 @@ class BeakerClient(SchemeClient):
         return self.file_info.size
 
     def get_resource(self, temp_file: io.BufferedWriter) -> None:
-        with Beaker.from_env() as beaker:
+        with Beaker.from_env() as beaker:  # type: ignore
             for chunk in beaker.dataset.stream_file(self.dataset, self.filepath):
                 if chunk:
                     temp_file.write(chunk)
