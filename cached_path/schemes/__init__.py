@@ -1,6 +1,8 @@
 import logging
 from typing import Dict, Optional, Set, Type
 
+import packaging.version
+
 from .gs import GsClient
 from .hf import hf_get_from_cache
 from .http import HttpClient
@@ -10,8 +12,14 @@ from .scheme_client import SchemeClient
 
 __all__ = ["GsClient", "HttpClient", "S3Client", "R2Client", "SchemeClient", "hf_get_from_cache"]
 
+BeakerClient: Optional[Type[SchemeClient]] = None
 try:
-    from .beaker import BeakerClient
+    import beaker.version
+
+    if packaging.version.parse(beaker.version.VERSION) < packaging.version.parse("2.0"):
+        from .beaker_v1 import BeakerClient
+    else:
+        from .beaker import BeakerClient
 
     __all__.append("BeakerClient")
 except (ImportError, ModuleNotFoundError):

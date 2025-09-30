@@ -28,38 +28,34 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ['3.9', '3.10']
+        python: ['3.10']
         task:
           - name: Test
             run: |
               pytest -v --color=yes --doctest-modules --doctest-glob='*.md'
 
+          - name: Lint
+            run: ruff check .
+
+          - name: Type check
+            run: mypy .
+
+          - name: Build
+            run: |
+              python -m build
+
+          - name: Style
+            run: black --check .
+
+          - name: Docs
+            run: cd docs && make html
+
         include:
-          - python: '3.10'
+          - python: '3.9'
             task:
-              name: Lint
-              run: ruff check .
-
-          - python: '3.10'
-            task:
-              name: Type check
-              run: mypy .
-
-          - python: '3.10'
-            task:
-              name: Build
-              run: |
-                python -m build
-
-          - python: '3.10'
-            task:
-              name: Style
-              run: black --check .
-
-          - python: '3.10'
-            task:
-              name: Docs
-              run: cd docs && make html
+              name: Test
+              run:
+                pytest -v --color=yes
 
     steps:
       - uses: actions/checkout@v3
