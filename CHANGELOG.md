@@ -7,10 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-### Changed
+### Added
 
-- Requires beaker-py v2 for `beaker://` requests.
-- Requires Python >= 3.10.
+- Added support for beaker-py v2 for `beaker://` requests.
 
 ## [v1.7.4](https://github.com/allenai/cached_path/releases/tag/v1.7.4) - 2025-09-29
 

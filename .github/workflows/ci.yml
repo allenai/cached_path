@@ -50,6 +50,13 @@ jobs:
           - name: Docs
             run: cd docs && make html
 
+        include:
+          - python: '3.9'
+            task:
+              name: Test
+              run:
+                pytest -v --color=yes
+
     steps:
       - uses: actions/checkout@v3
 
