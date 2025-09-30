@@ -12,6 +12,7 @@ from .scheme_client import SchemeClient
 
 __all__ = ["GsClient", "HttpClient", "S3Client", "R2Client", "SchemeClient", "hf_get_from_cache"]
 
+BeakerClient: Optional[Type[SchemeClient]] = None
 try:
     import beaker.version
 
