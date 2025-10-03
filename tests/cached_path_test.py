@@ -165,11 +165,11 @@ class TestCachedPathHttp(BaseTestClass):
 
         # non-existent file
         with pytest.raises(FileNotFoundError):
-            filename = cached_path(self.FIXTURES_ROOT / "does_not_exist" / "fake_file.tar.gz")
+            cached_path(self.FIXTURES_ROOT / "does_not_exist" / "fake_file.tar.gz")
 
         # unparsable URI
         with pytest.raises(ValueError):
-            filename = cached_path("fakescheme://path/to/fake/file.tar.gz")
+            cached_path("fakescheme://path/to/fake/file.tar.gz")
 
         # existing file as path
         assert cached_path(self.glove_file) == self.glove_file
@@ -183,13 +183,24 @@ class TestCachedPathHttp(BaseTestClass):
         with open(filename, "rb") as cached_file:
             assert cached_file.read() == self.glove_bytes
 
-        # archives
+        # archives - auto-extract
+        filename = cached_path(self.FIXTURES_ROOT / "common" / "quote.tar.gz!quote.txt")
+        with open(filename) as f:
+            assert f.read().startswith("I mean, ")
+
+        # archives - explicit extract
         filename = cached_path(
             self.FIXTURES_ROOT / "common" / "quote.tar.gz!quote.txt",
             extract_archive=True,
         )
-        with open(filename, "r") as f:
+        with open(filename) as f:
             assert f.read().startswith("I mean, ")
+
+        with pytest.raises(FileNotFoundError):
+            cached_path(
+                self.FIXTURES_ROOT / "common" / "quote.tar.gz!quote.txt",
+                extract_archive=False,
+            )
 
     @responses.activate
     def test_http_404(self):
