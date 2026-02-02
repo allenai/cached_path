@@ -31,8 +31,15 @@ class CacheFile:
         return self.temp_file
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.temp_file.close()
+        del exc_type, traceback
+
         if exc_value is None:
+            # Ensure all data is written to disk.
+            self.temp_file.flush()
+            if hasattr(os, "fdatasync"):  # only available on linux
+                os.fdatasync(self.temp_file)  # type: ignore
+            self.temp_file.close()
+
             # Success.
             logger.debug(
                 "Renaming temp file %s to cache at %s", self.temp_file.name, self.cache_filename
@@ -40,7 +47,9 @@ class CacheFile:
             # Rename the temp file to the actual cache filename.
             os.replace(self.temp_file.name, self.cache_filename)
             return True
-        # Something went wrong, remove the temp file.
-        logger.debug("removing temp file %s", self.temp_file.name)
-        os.remove(self.temp_file.name)
-        return False
+        else:
+            # Something went wrong, remove the temp file.
+            logger.debug("removing temp file %s", self.temp_file.name)
+            self.temp_file.close()
+            os.remove(self.temp_file.name)
+            return False
