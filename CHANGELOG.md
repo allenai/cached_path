@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Ensure filesystem syncs data from temp file before replacing with permanent file.
+
 ## [v1.8.1](https://github.com/allenai/cached_path/releases/tag/v1.8.1) - 2025-12-15
 
 - Allow `google-cloud-storage` version 3.x.
