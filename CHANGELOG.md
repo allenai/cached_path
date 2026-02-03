@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.8.9](https://github.com/allenai/cached_path/releases/tag/v1.8.9) - 2026-02-02
+
 ### Fixed
 
 - Ensure filesystem syncs data from temp file before replacing with permanent file.
