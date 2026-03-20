@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.8.10](https://github.com/allenai/cached_path/releases/tag/v1.8.10) - 2026-03-20
+
 ### Fixed
 
 - Ensure default progress bar writes to stderr, not stdout.
