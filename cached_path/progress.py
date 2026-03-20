@@ -1,6 +1,7 @@
 import io
 from typing import List, Optional
 
+from rich.console import Console
 from rich.progress import BarColumn, DownloadColumn, Progress, TaskID, TimeElapsedColumn
 
 
@@ -135,4 +136,5 @@ def get_download_progress(quiet: bool = False) -> Progress:
             TimeElapsedColumn(),
             DownloadColumn(),
             #  disable=quiet,
+            console=Console(stderr=True),
         )
