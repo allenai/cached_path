@@ -50,3 +50,6 @@ docs/*.md
 docs/api
 site/
 mkdocs.yml
+
+# uv
+uv.lock
