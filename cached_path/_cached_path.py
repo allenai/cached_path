@@ -22,6 +22,7 @@ from .util import (
     _lock_file_path,
     _meta_file_path,
     check_tarfile,
+    check_zipfile,
     find_latest_cached,
     resource_to_filename,
 )
@@ -283,6 +284,7 @@ def cached_path(
                         rar_file.extractall(tmp_extraction_dir)
                 else:
                     with ZipFile(file_path) as zip_file:
+                        check_zipfile(zip_file)
                         zip_file.extractall(tmp_extraction_dir)
                 # Extraction was successful, rename temp directory to final
                 # cache directory and dump the meta data.

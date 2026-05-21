@@ -1,9 +1,10 @@
 import os
 import tarfile
 from hashlib import sha256
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import List, Optional, Tuple
 from urllib.parse import urlparse
+from zipfile import ZipFile
 
 from .common import PathOrStr, get_cache_dir
 from .meta import Meta
@@ -114,6 +115,29 @@ def check_tarfile(tar_file: tarfile.TarFile):
                     f"Tar file {str(tar_file.name)} is trying to link to a file "
                     "outside of its extraction directory."
                 )
+
+
+def _check_archive_member_path(member_name: str, archive_type: str, archive_name: str):
+    posix_path = PurePosixPath(member_name)
+    windows_path = PureWindowsPath(member_name)
+
+    if (
+        posix_path.is_absolute()
+        or windows_path.is_absolute()
+        or windows_path.drive
+        or ".." in posix_path.parts
+        or ".." in windows_path.parts
+    ):
+        raise ValueError(
+            f"{archive_type} {archive_name} is trying to create a file outside of its extraction directory."
+        )
+
+
+def check_zipfile(zip_file: ZipFile):
+    """Zip files should not be able to write outside the extraction directory."""
+    archive_name = str(zip_file.filename)
+    for zip_info in zip_file.infolist():
+        _check_archive_member_path(zip_info.filename, "Zip file", archive_name)
 
 
 def is_url_or_existing_file(url_or_filename: PathOrStr) -> bool:

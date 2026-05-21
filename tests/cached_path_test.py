@@ -4,6 +4,7 @@ import time
 import uuid
 from collections import Counter
 from pathlib import Path
+from zipfile import ZipFile
 
 import packaging.version
 import pytest
@@ -265,6 +266,17 @@ class TestCachedPathWithArchive(BaseTestClass):
 
     def test_extract_with_external_symlink(self):
         dangerous_file = self.FIXTURES_ROOT / "common" / "external_symlink.tar.gz"
+        with pytest.raises(ValueError):
+            cached_path(dangerous_file, extract_archive=True)
+
+    @pytest.mark.parametrize(
+        "member_name", ["../escape.txt", "..\\escape.txt", "/escape.txt", "C:/escape.txt"]
+    )
+    def test_extract_rejects_unsafe_zip_member_path(self, member_name: str):
+        dangerous_file = self.TEST_DIR / "unsafe.zip"
+        with ZipFile(dangerous_file, "w") as zip_file:
+            zip_file.writestr(member_name, "bad")
+
         with pytest.raises(ValueError):
             cached_path(dangerous_file, extract_archive=True)
 
